@@ -1,0 +1,35 @@
+# Ignore build output
+bin/
+obj/
+
+# Ignore Rider IDE files
+.idea/
+*.sln.iml
+
+# Ignore VSCode settings
+.vscode/
+
+# Ignore user secrets
+secrets.json
+
+# Ignore Docker volumes
+pgdata/
+redisdata/
+
+# Ignore OS files
+.DS_Store
+
+# Ignore test output
+Test/bin/
+Test/obj/
+API/bin/
+API/obj/
+
+# Ignore migrations snapshots (optional)
+API/Migrations/*_Snapshot.cs
+
+# Ignore HTTP files
+API/*.http
+
+# Ignore environment files
+.env
