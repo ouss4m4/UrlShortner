@@ -1,7 +1,7 @@
 using Microsoft.EntityFrameworkCore;
-using UrlShortner.Models;
+using UrlShortner.API.Models;
 
-namespace UrlShortner.Data;
+namespace UrlShortner.API.Data;
 
 public class UrlShortnerDbContext : DbContext
 {
@@ -15,7 +15,7 @@ public class UrlShortnerDbContext : DbContext
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         modelBuilder.Entity<Url>()
-            .HasIndex(u => u.Short)
+            .HasIndex(u => u.ShortCode)
             .IsUnique();
     }
 }

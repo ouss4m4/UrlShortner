@@ -1,6 +1,6 @@
 using Xunit;
-using UrlShortner.Models;
-using UrlShortner.Data;
+using UrlShortner.API.Models;
+using UrlShortner.API.Data;
 using Microsoft.EntityFrameworkCore;
 using System.Threading.Tasks;
 

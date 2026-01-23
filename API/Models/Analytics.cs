@@ -1,4 +1,4 @@
-namespace UrlShortner.Models;
+namespace UrlShortner.API.Models;
 
 public class Analytics
 {

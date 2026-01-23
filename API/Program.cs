@@ -1,18 +1,22 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-using UrlShortner.Models;
-using UrlShortner.Data;
+using UrlShortner.API.Models;
+using UrlShortner.API.Data;
+using UrlShortner.API.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
 // Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
 builder.Services.AddOpenApi();
+builder.Services.AddScoped<IUserService, UserService>();
+builder.Services.AddScoped<IUrlService, UrlService>();
+builder.Services.AddScoped<IVisitService, VisitService>();
 
 var isTest = Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT") == "Test";
 if (!isTest)
 {
-    builder.Services.AddDbContext<UrlShortner.Data.UrlShortnerDbContext>(options =>
+    builder.Services.AddDbContext<UrlShortner.API.Data.UrlShortnerDbContext>(options =>
         options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
 }
 
@@ -45,38 +49,7 @@ app.MapGet("/weatherforecast", () =>
     })
     .WithName("GetWeatherForecast");
 
-app.MapPost("/api/users", async ([FromBody] User user, [FromServices] UrlShortnerDbContext db) =>
-{
-    db.Users.Add(user);
-    await db.SaveChangesAsync();
-    return Results.Ok(user);
-});
-
-app.MapGet("/api/users/{id}", async (int id, [FromServices] UrlShortnerDbContext db) =>
-{
-    var user = await db.Users.FindAsync(id);
-    return user == null ? Results.NotFound() : Results.Ok(user);
-});
-
-app.MapPut("/api/users/{id}", async (int id, [FromBody] User updated, [FromServices] UrlShortnerDbContext db) =>
-{
-    var user = await db.Users.FindAsync(id);
-    if (user == null) return Results.NotFound();
-    user.Username = updated.Username;
-    user.Email = updated.Email;
-    db.Users.Update(user);
-    await db.SaveChangesAsync();
-    return Results.Ok(user);
-});
-
-app.MapDelete("/api/users/{id}", async (int id, [FromServices] UrlShortnerDbContext db) =>
-{
-    var user = await db.Users.FindAsync(id);
-    if (user == null) return Results.NotFound();
-    db.Users.Remove(user);
-    await db.SaveChangesAsync();
-    return Results.Ok();
-});
+app.MapControllers();
 
 app.Run();
 
