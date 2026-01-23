@@ -4,6 +4,7 @@ using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
 using UrlShortner.API.Data;
 using UrlShortner.API.Models;
+using API.Services;
 
 namespace UrlShortner.API.Services
 {
@@ -11,11 +12,18 @@ namespace UrlShortner.API.Services
     {
         private readonly UrlShortnerDbContext _context;
         private readonly IShortCodeGenerator _shortCodeGenerator;
+        private readonly ICacheService? _cacheService;
+        private const string CacheKeyPrefix = "url:shortcode:";
+        private static readonly TimeSpan CacheExpiration = TimeSpan.FromHours(1);
 
-        public UrlService(UrlShortnerDbContext context, IShortCodeGenerator shortCodeGenerator)
+        public UrlService(
+            UrlShortnerDbContext context,
+            IShortCodeGenerator shortCodeGenerator,
+            ICacheService? cacheService = null)
         {
             _context = context;
             _shortCodeGenerator = shortCodeGenerator;
+            _cacheService = cacheService;
         }
 
         public async Task<Url> CreateUrlAsync(Url url)
@@ -71,6 +79,30 @@ namespace UrlShortner.API.Services
 
         public async Task<Url?> GetUrlByShortCodeAsync(string shortCode)
         {
+            // Try to get from cache first
+            if (_cacheService != null)
+            {
+                var cacheKey = $"{CacheKeyPrefix}{shortCode}";
+                var cached = await _cacheService.GetAsync<Url>(cacheKey);
+
+                if (cached != null)
+                {
+                    return cached;
+                }
+
+                // Not in cache, get from DB
+                var url = await _context.Urls.FirstOrDefaultAsync(u => u.ShortCode == shortCode);
+
+                // Cache for future requests
+                if (url != null)
+                {
+                    await _cacheService.SetAsync(cacheKey, url, CacheExpiration);
+                }
+
+                return url;
+            }
+
+            // No cache service, just query DB
             return await _context.Urls.FirstOrDefaultAsync(u => u.ShortCode == shortCode);
         }
 
@@ -83,6 +115,13 @@ namespace UrlShortner.API.Services
         {
             var existing = await _context.Urls.FindAsync(url.Id);
             if (existing == null) return null;
+
+            // Invalidate cache before updating
+            if (_cacheService != null && !string.IsNullOrEmpty(existing.ShortCode))
+            {
+                await _cacheService.RemoveAsync($"{CacheKeyPrefix}{existing.ShortCode}");
+            }
+
             _context.Entry(existing).CurrentValues.SetValues(url);
             await _context.SaveChangesAsync();
             return existing;
@@ -92,6 +131,13 @@ namespace UrlShortner.API.Services
         {
             var url = await _context.Urls.FindAsync(id);
             if (url == null) return false;
+
+            // Invalidate cache before deleting
+            if (_cacheService != null && !string.IsNullOrEmpty(url.ShortCode))
+            {
+                await _cacheService.RemoveAsync($"{CacheKeyPrefix}{url.ShortCode}");
+            }
+
             _context.Urls.Remove(url);
             await _context.SaveChangesAsync();
             return true;
