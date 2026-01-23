@@ -18,8 +18,21 @@ namespace UrlShortner.API.Controllers
         [HttpPost]
         public async Task<IActionResult> Create([FromBody] Url url)
         {
-            var created = await _urlService.CreateUrlAsync(url);
-            return CreatedAtAction(nameof(GetById), new { id = created.Id }, created);
+            try
+            {
+                var created = await _urlService.CreateUrlAsync(url);
+                return CreatedAtAction(nameof(GetById), new { id = created.Id }, created);
+            }
+            catch (InvalidOperationException ex)
+            {
+                // Return 409 Conflict with a clear error message for UI
+                return Conflict(new
+                {
+                    error = "ShortCodeAlreadyExists",
+                    message = ex.Message,
+                    shortCode = url.ShortCode
+                });
+            }
         }
 
         [HttpGet("{id}")]
@@ -36,6 +49,17 @@ namespace UrlShortner.API.Controllers
             var url = await _urlService.GetUrlByShortCodeAsync(shortCode);
             if (url == null) return NotFound();
             return Ok(url);
+        }
+
+        [HttpGet("redirect/{shortCode}")]
+        public async Task<IActionResult> RedirectToOriginal(string shortCode)
+        {
+            var url = await _urlService.GetUrlByShortCodeAsync(shortCode);
+            if (url == null) return NotFound();
+
+            // TODO: Track visit (record IP, browser, country, etc.)
+
+            return Redirect(url.OriginalUrl);
         }
 
         [HttpGet("user/{userId}")]

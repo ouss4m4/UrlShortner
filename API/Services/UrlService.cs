@@ -10,16 +10,58 @@ namespace UrlShortner.API.Services
     public class UrlService : IUrlService
     {
         private readonly UrlShortnerDbContext _context;
-        public UrlService(UrlShortnerDbContext context)
+        private readonly IShortCodeGenerator _shortCodeGenerator;
+
+        public UrlService(UrlShortnerDbContext context, IShortCodeGenerator shortCodeGenerator)
         {
             _context = context;
+            _shortCodeGenerator = shortCodeGenerator;
         }
 
         public async Task<Url> CreateUrlAsync(Url url)
         {
-            _context.Urls.Add(url);
-            await _context.SaveChangesAsync();
-            return url;
+            try
+            {
+                // Check for duplicate short code if one is provided
+                if (!string.IsNullOrEmpty(url.ShortCode))
+                {
+                    var existing = await _context.Urls
+                        .FirstOrDefaultAsync(u => u.ShortCode == url.ShortCode);
+
+                    if (existing != null)
+                    {
+                        throw new InvalidOperationException(
+                            $"Short code '{url.ShortCode}' is already taken. Please choose a different short code."
+                        );
+                    }
+                }
+
+                // Add the URL first to get an ID
+                _context.Urls.Add(url);
+                await _context.SaveChangesAsync();
+
+                // If no short code provided, generate one from the ID
+                if (string.IsNullOrEmpty(url.ShortCode))
+                {
+                    url.ShortCode = _shortCodeGenerator.Encode(url.Id);
+                    await _context.SaveChangesAsync();
+                }
+
+                return url;
+            }
+            catch (DbUpdateException ex)
+            {
+                // Catch any database-level unique constraint violations
+                if (ex.InnerException?.Message.Contains("ShortCode") == true ||
+                    ex.InnerException?.Message.Contains("IX_Urls_ShortCode") == true)
+                {
+                    throw new InvalidOperationException(
+                        $"Short code '{url.ShortCode}' is already taken. Please choose a different short code.",
+                        ex
+                    );
+                }
+                throw; // Re-throw if it's a different DB error
+            }
         }
 
         public async Task<Url?> GetUrlByIdAsync(int id)

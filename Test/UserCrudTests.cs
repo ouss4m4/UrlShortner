@@ -49,6 +49,7 @@ namespace Test
             db.Users.Update(user);
             await db.SaveChangesAsync();
             var found = await db.Users.FindAsync(user.Id);
+            Assert.NotNull(found);
             Assert.Equal("updated@example.com", found.Email);
         }
 

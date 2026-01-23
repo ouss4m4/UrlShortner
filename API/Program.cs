@@ -9,9 +9,11 @@ var builder = WebApplication.CreateBuilder(args);
 // Add services to the container.
 // Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
 builder.Services.AddOpenApi();
+builder.Services.AddSingleton<IShortCodeGenerator, ShortCodeGenerator>();
 builder.Services.AddScoped<IUserService, UserService>();
 builder.Services.AddScoped<IUrlService, UrlService>();
 builder.Services.AddScoped<IVisitService, VisitService>();
+builder.Services.AddScoped<IAnalyticsService, AnalyticsService>();
 
 var isTest = Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT") == "Test";
 if (!isTest)
