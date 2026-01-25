@@ -1,5 +1,5 @@
 using Microsoft.EntityFrameworkCore;
-using UrlShortner.API.Models;
+using UrlShortner.Models;
 
 namespace UrlShortner.API.Data;
 

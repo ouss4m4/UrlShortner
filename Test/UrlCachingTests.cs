@@ -1,7 +1,7 @@
 using API.Services;
 using Microsoft.EntityFrameworkCore;
 using UrlShortner.API.Data;
-using UrlShortner.API.Models;
+using UrlShortner.Models;
 using UrlShortner.API.Services;
 using Xunit;
 

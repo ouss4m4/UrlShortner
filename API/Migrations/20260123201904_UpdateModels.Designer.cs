@@ -25,7 +25,7 @@ namespace UrlShortner.Migrations
 
             NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
 
-            modelBuilder.Entity("UrlShortner.API.Models.Analytics", b =>
+            modelBuilder.Entity("UrlShortner.Models.Analytics", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -51,7 +51,7 @@ namespace UrlShortner.Migrations
                     b.ToTable("Analytics");
                 });
 
-            modelBuilder.Entity("UrlShortner.API.Models.Url", b =>
+            modelBuilder.Entity("UrlShortner.Models.Url", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -84,7 +84,7 @@ namespace UrlShortner.Migrations
                     b.ToTable("Urls");
                 });
 
-            modelBuilder.Entity("UrlShortner.API.Models.User", b =>
+            modelBuilder.Entity("UrlShortner.Models.User", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -111,7 +111,7 @@ namespace UrlShortner.Migrations
                     b.ToTable("Users");
                 });
 
-            modelBuilder.Entity("UrlShortner.API.Models.Visit", b =>
+            modelBuilder.Entity("UrlShortner.Models.Visit", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()

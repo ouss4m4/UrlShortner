@@ -1,4 +1,4 @@
-namespace UrlShortner.API.Models;
+namespace UrlShortner.Models;
 
 public class Visit
 {

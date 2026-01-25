@@ -1,5 +1,5 @@
 using Microsoft.AspNetCore.Mvc;
-using UrlShortner.API.Models;
+using UrlShortner.Models;
 using UrlShortner.API.Services;
 
 namespace UrlShortner.API.Controllers

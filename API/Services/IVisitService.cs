@@ -1,5 +1,5 @@
 using System.Threading.Tasks;
-using UrlShortner.API.Models;
+using UrlShortner.Models;
 
 namespace UrlShortner.API.Services
 {

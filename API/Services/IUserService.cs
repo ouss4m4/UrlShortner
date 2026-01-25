@@ -1,4 +1,4 @@
-using UrlShortner.API.Models;
+using UrlShortner.Models;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 

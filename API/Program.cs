@@ -1,7 +1,6 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-using UrlShortner.API.Models;
-using UrlShortner.API.Data;
+using UrlShortner.Models;
 using UrlShortner.API.Services;
 using API.Services;
 using StackExchange.Redis;
