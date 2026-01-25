@@ -1,7 +1,7 @@
 # Current Status - URL Shortener Project
 
 **Last Updated:** January 25, 2026  
-**Current Phase:** Core Features Complete + Swagger Documentation
+**Current Phase:** Phase 2 - Rate Limiting & Security (In Progress)
 
 ## ✅ Completed Features
 
@@ -57,13 +57,27 @@
 - ✅ **JSON serialization** for cached objects
 - ✅ **Dependency injection** configured (optional in tests)
 
-### 6. API Documentation
+### 6. Rate Limiting (Phase 2.1) ✅
+
+- ✅ **Redis-backed rate limiter** (distributed, supports multiple instances)
+- ✅ **Fixed window algorithm** (atomic INCR + EXPIRE)
+- ✅ **Per-IP rate limiting** with X-Forwarded-For support
+- ✅ **Endpoint-specific limits**:
+  - POST /api/url: 10 requests/minute
+  - POST /api/url/bulk: 5 requests/minute
+  - GET /api/analytics: 100 requests/minute
+- ✅ **Rate limit middleware** with graceful degradation
+- ✅ **Rate limit headers** (X-RateLimit-Limit, X-RateLimit-Remaining, Retry-After)
+- ✅ **429 responses** when limits exceeded
+- ✅ **Pattern matching** for parameterized routes
+
+### 7. API Documentation
 
 - ✅ **Swagger/OpenAPI** integration (Swashbuckle.AspNetCore)
 - ✅ **Interactive API UI** at /swagger
 - ✅ **OpenAPI spec** at /swagger/v1/swagger.json
 
-### 7. API Endpoints
+### 8. API Endpoints
 
 ```
 # Core Endpoints
@@ -89,15 +103,18 @@ PUT    /api/user/{id}         - Update user
 DELETE /api/user/{id}         - Delete user
 ```
 
-### 8. Test Coverage
+### 9. Test Coverage
 
-**95 tests passing** (~1s execution):
+**110 tests passing** (~4s execution):
 
 - CacheServiceTests: 6 tests (Redis Get/Set/Remove/Exists)
 - UrlCachingTests: 8 tests (cache hit/miss, invalidation, warmup, smart TTL)
 - UrlExpirationTests: 5 tests (expired URLs, null expiry, user filtering)
 - ShortCodeValidationTests: 20 tests (length, characters, reserved words)
 - UrlCategoryTagTests: 14 tests (categories, tags, filtering, expiration)
+- BulkUrlCreationTests: 11 tests (bulk import, validation, partial success)
+- RateLimiterTests: 10 tests (Redis rate limiter unit tests)
+- RateLimitingIntegrationTests: 5 tests (middleware integration, 429 responses)
 - BulkUrlCreationTests: 11 tests (bulk creation, partial success, validation)
 - ShortCodeGeneratorTests: 6 tests
 - UrlCrudTests: 8 tests

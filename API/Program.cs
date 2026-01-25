@@ -5,6 +5,7 @@ using UrlShortner.Models;
 using UrlShortner.API.Services;
 using API.Services;
 using StackExchange.Redis;
+using UrlShortner.API.Middleware;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -54,6 +55,7 @@ if (!isTest)
         builder.Configuration.GetConnectionString("RedisConnection") ?? "localhost:6379");
     builder.Services.AddSingleton<IConnectionMultiplexer>(redisConnection);
     builder.Services.AddSingleton<ICacheService, RedisCacheService>();
+    builder.Services.AddSingleton<IRedisRateLimiter, RedisRateLimiter>();
 
     builder.Services.AddDbContext<UrlShortner.API.Data.UrlShortnerDbContext>(options =>
         options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
@@ -75,6 +77,12 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseHttpsRedirection();
+
+// Rate limiting middleware (before routing)
+if (!app.Environment.IsEnvironment("Test"))
+{
+    app.UseMiddleware<RateLimitingMiddleware>();
+}
 
 // Root-level redirect endpoint: /{shortCode} -> Original URL
 // This is the main purpose of a URL shortener - keep it SHORT!
