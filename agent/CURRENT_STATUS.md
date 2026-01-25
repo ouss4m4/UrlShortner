@@ -32,6 +32,8 @@
 - ✅ **Root redirect endpoint** (GET /{shortCode} → 302)
 - ✅ **Cache invalidation** on URL updates/deletes
 - ✅ **URL expiration/TTL** (time-to-live for short URLs)
+- ✅ **URL categories** (organize URLs by topic with case-insensitive search)
+- ✅ **URL tags** (comma-separated tags with case-insensitive search)
 
 ### 4. Visit Tracking & Analytics
 
@@ -88,12 +90,13 @@ DELETE /api/user/{id}         - Delete user
 
 ### 8. Test Coverage
 
-**70 tests passing** (~1.7s execution):
+**84 tests passing** (~1.9s execution):
 
 - CacheServiceTests: 6 tests (Redis Get/Set/Remove/Exists)
 - UrlCachingTests: 8 tests (cache hit/miss, invalidation, warmup, smart TTL)
 - UrlExpirationTests: 5 tests (expired URLs, null expiry, user filtering)
 - ShortCodeValidationTests: 20 tests (length, characters, reserved words)
+- UrlCategoryTagTests: 14 tests (categories, tags, filtering, expiration)
 - ShortCodeGeneratorTests: 6 tests
 - UrlCrudTests: 8 tests
 - UrlControllerTests: 3 tests
@@ -111,11 +114,36 @@ DELETE /api/user/{id}         - Delete user
 
 ## 📝 Recent Completion (January 25, 2026)
 
-**Phase 1.2: Custom Short Code Validation** ✅
+**Phase 1.3: URL Categories & Tags** ✅
+
+Following strict TDD (RED-GREEN-REFACTOR):
+
+**Features:**
+
+- ✅ Category field (nullable string) for organizing URLs by topic
+- ✅ Tags field (nullable comma-separated string) for flexible tagging
+- ✅ GetUrlsByCategoryAsync(category, userId) - case-insensitive search
+- ✅ GetUrlsByTagAsync(tag, userId) - case-insensitive partial match
+- ✅ Both methods filter expired URLs automatically
+- ✅ User isolation (users only see their own URLs)
+
+**Implementation:**
+
+- ✅ Wrote 14 comprehensive tests (RED phase)
+- ✅ Extended Url model with Category and Tags properties
+- ✅ Added two new methods to IUrlService interface
+- ✅ Implemented filtering logic in UrlService
+- ✅ Created and applied database migration
+- ✅ All 84 tests passing (70 existing + 14 new)
+
+---
+
+**Previous: Phase 1.2: Custom Short Code Validation** ✅
 
 Following strict TDD (RED-GREEN-REFACTOR):
 
 **Validation Rules:**
+
 - ✅ Minimum length: 3 characters
 - ✅ Maximum length: 20 characters
 - ✅ Character set: Alphanumeric only (a-z, A-Z, 0-9)
@@ -123,6 +151,7 @@ Following strict TDD (RED-GREEN-REFACTOR):
 - ✅ Case sensitivity preserved (ABC ≠ abc)
 
 **Implementation:**
+
 - ✅ Wrote 20 validation tests (RED phase)
 - ✅ Implemented ValidateShortCode() private method
 - ✅ Integrated validation into CreateUrlAsync (before duplicate check)
@@ -173,8 +202,8 @@ Following strict TDD (RED-GREEN-REFACTOR):
 ### Phase 1: Advanced URL Features
 
 - ✅ **URL expiration** - Time-to-live for short URLs
-- [ ] **Custom short codes** - User-specified vanity URLs (enhanced validation)
-- [ ] **URL categories/tags** - Organize URLs by topic
+- ✅ **Custom short codes** - User-specified vanity URLs (enhanced validation)
+- ✅ **URL categories/tags** - Organize URLs by topic
 - [ ] **Bulk URL creation** - Import multiple URLs at once
 
 ### Phase 2: Rate Limiting & Security

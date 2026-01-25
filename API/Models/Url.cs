@@ -8,4 +8,6 @@ public class Url
     public string ShortCode { get; set; } = string.Empty;     // previously "Short"
     public DateTime CreatedAt { get; set; }
     public DateTime? Expiry { get; set; }
+    public string? Category { get; set; }
+    public string? Tags { get; set; }  // Comma-separated tags
 }

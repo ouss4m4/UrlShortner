@@ -215,6 +215,26 @@ namespace UrlShortner.API.Services
             return urls.Where(u => !u.Expiry.HasValue || u.Expiry.Value > DateTime.UtcNow);
         }
 
+        public async Task<IEnumerable<Url>> GetUrlsByCategoryAsync(string category, int userId)
+        {
+            var urls = await _context.Urls
+                .Where(u => u.UserId == userId && u.Category != null && u.Category.ToLower() == category.ToLower())
+                .ToListAsync();
+
+            // Filter out expired URLs
+            return urls.Where(u => !u.Expiry.HasValue || u.Expiry.Value > DateTime.UtcNow);
+        }
+
+        public async Task<IEnumerable<Url>> GetUrlsByTagAsync(string tag, int userId)
+        {
+            var urls = await _context.Urls
+                .Where(u => u.UserId == userId && u.Tags != null && u.Tags.ToLower().Contains(tag.ToLower()))
+                .ToListAsync();
+
+            // Filter out expired URLs
+            return urls.Where(u => !u.Expiry.HasValue || u.Expiry.Value > DateTime.UtcNow);
+        }
+
         public async Task<Url?> UpdateUrlAsync(Url url)
         {
             var existing = await _context.Urls.FindAsync(url.Id);

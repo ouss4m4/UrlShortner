@@ -10,6 +10,8 @@ namespace UrlShortner.API.Services
         Task<Url?> GetUrlByIdAsync(int id);
         Task<Url?> GetUrlByShortCodeAsync(string shortCode);
         Task<IEnumerable<Url>> GetUrlsByUserIdAsync(int userId);
+        Task<IEnumerable<Url>> GetUrlsByCategoryAsync(string category, int userId);
+        Task<IEnumerable<Url>> GetUrlsByTagAsync(string tag, int userId);
         Task<Url?> UpdateUrlAsync(Url url);
         Task<bool> DeleteUrlAsync(int id);
     }

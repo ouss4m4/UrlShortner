@@ -2,7 +2,6 @@ using Microsoft.EntityFrameworkCore;
 using UrlShortner.API.Data;
 using UrlShortner.API.Services;
 using UrlShortner.Models;
-using Xunit;
 
 namespace Test;
 
