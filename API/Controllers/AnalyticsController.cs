@@ -40,5 +40,13 @@ namespace UrlShortner.API.Controllers
             var analytics = await _analyticsService.GetAnalyticsByDateRangeAsync(startUtc, endUtc);
             return Ok(analytics);
         }
+
+        // GET api/analytics/country
+        [HttpGet("country")]
+        public async Task<IActionResult> GetByCountry()
+        {
+            var analytics = await _analyticsService.GetAnalyticsByCountryAsync();
+            return Ok(analytics);
+        }
     }
 }

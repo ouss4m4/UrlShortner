@@ -17,6 +17,12 @@ builder.Services.AddScoped<IUrlService, UrlService>();
 builder.Services.AddScoped<IVisitService, VisitService>();
 builder.Services.AddScoped<IAnalyticsService, AnalyticsService>();
 
+// Register GeoIP service with HttpClient
+builder.Services.AddHttpClient<IGeoIpService, IpApiGeoIpService>(client =>
+{
+    client.Timeout = TimeSpan.FromSeconds(5); // Timeout for GeoIP lookups
+});
+
 // Register Redis
 var isTest = builder.Environment.EnvironmentName == "Test";
 if (!isTest)
@@ -63,6 +69,10 @@ app.MapGet("/{shortCode}", async (string shortCode, IUrlService urlService, Http
         {
             using var scope = scopeFactory.CreateScope();
             var visitService = scope.ServiceProvider.GetRequiredService<IVisitService>();
+            var geoIpService = scope.ServiceProvider.GetRequiredService<IGeoIpService>();
+
+            // Lookup country from IP address
+            var country = await geoIpService.GetCountryCodeAsync(ipAddress);
 
             var visit = new Visit
             {
@@ -70,7 +80,7 @@ app.MapGet("/{shortCode}", async (string shortCode, IUrlService urlService, Http
                 IpAddress = ipAddress,
                 UserAgent = userAgent,
                 Referrer = referrer,
-                Country = "", // TODO: GeoIP lookup in future iteration
+                Country = country,
                 VisitedAt = DateTime.UtcNow
             };
 
