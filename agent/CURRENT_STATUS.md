@@ -25,6 +25,7 @@
 - ✅ **Base62 short code generation** (0-9, a-z, A-Z)
 - ✅ **Auto-generated short codes** from database IDs
 - ✅ **Custom/manual short codes** (alias support)
+- ✅ **Custom short code validation** (3-20 chars, alphanumeric, reserved words)
 - ✅ **Duplicate detection** with pre-insert check
 - ✅ **Error handling** (409 Conflict for collisions)
 - ✅ **URL expansion** by short code with Redis caching
@@ -87,11 +88,12 @@ DELETE /api/user/{id}         - Delete user
 
 ### 8. Test Coverage
 
-**50 tests passing** (~1.7s execution):
+**70 tests passing** (~1.7s execution):
 
 - CacheServiceTests: 6 tests (Redis Get/Set/Remove/Exists)
 - UrlCachingTests: 8 tests (cache hit/miss, invalidation, warmup, smart TTL)
 - UrlExpirationTests: 5 tests (expired URLs, null expiry, user filtering)
+- ShortCodeValidationTests: 20 tests (length, characters, reserved words)
 - ShortCodeGeneratorTests: 6 tests
 - UrlCrudTests: 8 tests
 - UrlControllerTests: 3 tests
@@ -109,11 +111,32 @@ DELETE /api/user/{id}         - Delete user
 
 ## 📝 Recent Completion (January 25, 2026)
 
-**Phase 1.1: URL Expiration + Smart Cache TTL & Warmup** ✅
+**Phase 1.2: Custom Short Code Validation** ✅
+
+Following strict TDD (RED-GREEN-REFACTOR):
+
+**Validation Rules:**
+- ✅ Minimum length: 3 characters
+- ✅ Maximum length: 20 characters
+- ✅ Character set: Alphanumeric only (a-z, A-Z, 0-9)
+- ✅ Reserved words: api, swagger, admin, health, analytics, user, url, visit
+- ✅ Case sensitivity preserved (ABC ≠ abc)
+
+**Implementation:**
+- ✅ Wrote 20 validation tests (RED phase)
+- ✅ Implemented ValidateShortCode() private method
+- ✅ Integrated validation into CreateUrlAsync (before duplicate check)
+- ✅ Updated existing tests to use valid 3+ character codes
+- ✅ All 70 tests passing
+
+---
+
+**Previous: Phase 1.1: URL Expiration + Smart Cache TTL & Warmup** ✅
 
 Following strict TDD (RED-GREEN-REFACTOR):
 
 **Part 1: URL Expiration**
+
 - ✅ Wrote 5 expiration tests (RED phase)
 - ✅ Implemented expiration checking in GetUrlByShortCodeAsync
 - ✅ Added expiry filtering in GetUrlsByUserIdAsync
@@ -121,6 +144,7 @@ Following strict TDD (RED-GREEN-REFACTOR):
 - ✅ URLs with null Expiry never expire (permanent)
 
 **Part 2: Smart Cache TTL & Warmup**
+
 - ✅ Wrote 4 cache enhancement tests (RED phase)
 - ✅ Implemented CalculateCacheTTL() method
 - ✅ Smart TTL: uses shorter of 1 hour OR time until expiry
@@ -129,13 +153,16 @@ Following strict TDD (RED-GREEN-REFACTOR):
 - ✅ All 50 tests passing
 
 **Files Created:**
+
 - Test/UrlExpirationTests.cs (5 tests)
 
 **Files Modified:**
+
 - API/Services/UrlService.cs (expiration + smart TTL + warmup)
 - Test/UrlCachingTests.cs (4 new tests, 1 updated test)
 
 **Commits:**
+
 - feat: URL expiration with smart cache TTL and warmup
 - docs: update process.md and CURRENT_STATUS.md for cache enhancements
 

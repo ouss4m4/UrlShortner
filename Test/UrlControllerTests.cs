@@ -29,28 +29,28 @@ public class UrlControllerTests
         using var context = GetInMemoryDbContext();
         var service = new UrlService(context, GetShortCodeGenerator());
         var controller = new UrlController(service);
-        
+
         var url1 = new Url
         {
             OriginalUrl = "https://facebook.com",
-            ShortCode = "fb",
+            ShortCode = "facebook",
             UserId = 1,
             CreatedAt = DateTime.UtcNow
         };
-        
+
         var result1 = await controller.Create(url1);
         Assert.IsType<CreatedAtActionResult>(result1);
-        
+
         var url2 = new Url
         {
             OriginalUrl = "https://facebook.com/different",
-            ShortCode = "fb",
+            ShortCode = "facebook",
             UserId = 2,
             CreatedAt = DateTime.UtcNow
         };
-        
+
         var result2 = await controller.Create(url2);
-        
+
         var conflictResult = Assert.IsType<ConflictObjectResult>(result2);
         Assert.Equal(409, conflictResult.StatusCode);
     }
@@ -61,7 +61,7 @@ public class UrlControllerTests
         using var context = GetInMemoryDbContext();
         var service = new UrlService(context, GetShortCodeGenerator());
         var controller = new UrlController(service);
-        
+
         var url = new Url
         {
             OriginalUrl = "https://example.com",
@@ -69,12 +69,12 @@ public class UrlControllerTests
             UserId = 1,
             CreatedAt = DateTime.UtcNow
         };
-        
+
         var result = await controller.Create(url);
-        
+
         var createdResult = Assert.IsType<CreatedAtActionResult>(result);
         Assert.Equal(201, createdResult.StatusCode);
-        
+
         var createdUrl = Assert.IsType<Url>(createdResult.Value);
         Assert.Equal("unique123", createdUrl.ShortCode);
     }
@@ -85,7 +85,7 @@ public class UrlControllerTests
         using var context = GetInMemoryDbContext();
         var service = new UrlService(context, GetShortCodeGenerator());
         var controller = new UrlController(service);
-        
+
         var url = new Url
         {
             OriginalUrl = "https://example.com",
@@ -93,12 +93,12 @@ public class UrlControllerTests
             UserId = 1,
             CreatedAt = DateTime.UtcNow
         };
-        
+
         var result = await controller.Create(url);
-        
+
         var createdResult = Assert.IsType<CreatedAtActionResult>(result);
         var createdUrl = Assert.IsType<Url>(createdResult.Value);
-        
+
         Assert.NotEmpty(createdUrl.ShortCode);
         Assert.Matches(@"^[0-9a-zA-Z]+$", createdUrl.ShortCode);
     }

@@ -172,7 +172,7 @@ namespace Test
             var url1 = new Url
             {
                 OriginalUrl = "https://facebook.com",
-                ShortCode = "fb",
+                ShortCode = "facebook",
                 UserId = 1,
                 CreatedAt = DateTime.UtcNow
             };
@@ -181,7 +181,7 @@ namespace Test
             var url2 = new Url
             {
                 OriginalUrl = "https://facebook.com/different",
-                ShortCode = "fb",
+                ShortCode = "facebook",
                 UserId = 2,
                 CreatedAt = DateTime.UtcNow
             };
@@ -190,7 +190,7 @@ namespace Test
                 async () => await service.CreateUrlAsync(url2)
             );
 
-            Assert.Contains("fb", exception.Message);
+            Assert.Contains("facebook", exception.Message);
             Assert.Contains("already taken", exception.Message, StringComparison.OrdinalIgnoreCase);
         }
     }
