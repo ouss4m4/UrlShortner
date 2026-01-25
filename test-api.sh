@@ -4,7 +4,7 @@ echo "🚀 URL Shortener API Test Script"
 echo "================================="
 echo ""
 
-API_URL="http://localhost:5000"
+API_URL="http://localhost:5011"
 
 echo "Testing API endpoints..."
 echo ""
@@ -53,10 +53,11 @@ curl -s -w "\nHTTP Status: %{http_code}\n" -X POST "${API_URL}/api/url" \
   }' | jq '.'
 echo ""
 
-# Test 5: Redirect test
-echo "🔗 Test 6: Test redirect endpoint"
-echo "Accessing: ${API_URL}/api/url/redirect/${SHORT_CODE}"
-curl -I -s "${API_URL}/api/url/redirect/${SHORT_CODE}" | head -n 10
+# Test 5: Redirect test - NEW ROOT LEVEL ENDPOINT!
+echo "🔗 Test 6: Test ROOT redirect endpoint (/{shortCode})"
+echo "Accessing: ${API_URL}/${SHORT_CODE}"
+echo "Following redirect with -L flag:"
+curl -L -s -o /dev/null -w "HTTP Status: %{http_code}\nFinal URL: %{url_effective}\n" "${API_URL}/${SHORT_CODE}"
 echo ""
 
 # Test 6: Create multiple URLs to test base62 encoding

@@ -51,16 +51,8 @@ namespace UrlShortner.API.Controllers
             return Ok(url);
         }
 
-        [HttpGet("redirect/{shortCode}")]
-        public async Task<IActionResult> RedirectToOriginal(string shortCode)
-        {
-            var url = await _urlService.GetUrlByShortCodeAsync(shortCode);
-            if (url == null) return NotFound();
-
-            // TODO: Track visit (record IP, browser, country, etc.)
-
-            return Redirect(url.OriginalUrl);
-        }
+        // Note: Redirect moved to root-level endpoint in Program.cs: /{shortCode}
+        // This keeps URLs short (the whole point!) instead of /api/url/redirect/{shortCode}
 
         [HttpGet("user/{userId}")]
         public async Task<IActionResult> GetByUserId(int userId)

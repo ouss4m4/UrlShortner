@@ -227,3 +227,78 @@ Following strict TDD process:
 - ✅ Redis caching with cache-aside pattern
 - ✅ Cache invalidation on updates/deletes
 - ✅ Proper HTTP status codes (201, 404, 409)
+
+---
+
+## Architecture Refactoring (January 25, 2026)
+
+**CRITICAL ISSUES IDENTIFIED:**
+
+After reviewing the project, several architectural issues need fixing:
+
+1. ❌ Redirect endpoint is under `/api/url/redirect/{code}` (too long for a "short" URL!)
+2. ❌ VisitController exists but visits should be events, not CRUD resources
+3. ❌ Visit recording will block redirects (needs fire-and-forget)
+4. ❌ Analytics table isn't populated (needs background aggregation job)
+5. ⚠️ Visit model uses generic `Metadata` string (needs structured fields)
+
+**REFACTORING PLAN:**
+
+### **Phase 1: Fix Redirect Route** [IN PROGRESS]
+
+**Goal:** Move redirect from `/api/url/redirect/{code}` to `/{code}` (root-level)
+
+- [ ] Create root-level redirect endpoint using minimal API
+- [ ] Keep it separate from API controllers (no `/api` prefix)
+- [ ] Update tests to verify new route
+- [ ] Test: `curl -L http://localhost:5011/abc123` → redirects
+
+**Estimated:** 30 minutes
+
+### **Phase 2: Fire-and-Forget Visit Tracking** [PLANNED]
+
+**Goal:** Record visit data without blocking redirect response
+
+- [ ] Enhance Visit model with structured fields (IP, UserAgent, Country, Referrer)
+- [ ] Create migration for new columns
+- [ ] Implement fire-and-forget visit recording using `Task.Run()`
+- [ ] Extract IP from `HttpContext.Connection.RemoteIpAddress`
+- [ ] Extract User-Agent from request headers
+- [ ] Write tests (verify visit created, redirect not blocked)
+
+**Estimated:** 1 hour
+
+### **Phase 3: Remove VisitController** [PLANNED]
+
+**Goal:** Clean up API - visits are events, not CRUD resources
+
+- [ ] Delete `API/Controllers/VisitController.cs`
+- [ ] Delete `Test/VisitCrudTests.cs`
+- [ ] Refactor IVisitService to only have `CreateVisitAsync` (remove CRUD)
+- [ ] Update VisitService to be internal event writer only
+
+**Estimated:** 15 minutes
+
+### **Future Phases (Not in this iteration):**
+
+- **Phase 4:** Analytics aggregation background job (Hangfire or IHostedService)
+- **Phase 5:** Refactor Analytics to read-only endpoints for admin dashboard
+
+**This matches real Bitly architecture:**
+
+- Short URLs at root level (`bit.ly/abc123`)
+- Visit tracking is invisible to users
+- Analytics are pre-aggregated for fast queries
+
+---
+
+## Phase 2 & 3 Complete: Visit Tracking (January 25, 2026)
+
+✅ **Enhanced Visit Model** - Structured fields (IP, UserAgent, Country, Referrer)
+✅ **Migration Applied** - Database updated with new columns
+✅ **Fire-and-Forget Tracking** - Non-blocking visit recording in Program.cs
+✅ **Deleted VisitController** - Visits are events, not CRUD
+✅ **Simplified Services** - IVisitService has only CreateVisitAsync
+✅ **41 Tests Passing** - Removed 3 VisitCrud tests
+
+**Architecture:** Visits auto-recorded on redirect, no API exposure, ready for analytics aggregation.

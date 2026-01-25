@@ -19,7 +19,7 @@ builder.Services.AddScoped<IVisitService, VisitService>();
 builder.Services.AddScoped<IAnalyticsService, AnalyticsService>();
 
 // Register Redis
-var isTest = Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT") == "Test";
+var isTest = builder.Environment.EnvironmentName == "Test";
 if (!isTest)
 {
     var redisConnection = ConnectionMultiplexer.Connect(
@@ -41,6 +41,57 @@ if (app.Environment.IsDevelopment())
 
 app.UseHttpsRedirection();
 
+// Root-level redirect endpoint: /{shortCode} -> Original URL
+// This is the main purpose of a URL shortener - keep it SHORT!
+app.MapGet("/{shortCode}", async (string shortCode, IUrlService urlService, HttpContext httpContext, IServiceScopeFactory scopeFactory) =>
+{
+    var url = await urlService.GetUrlByShortCodeAsync(shortCode);
+    if (url == null)
+    {
+        return Results.NotFound(new { error = "ShortCodeNotFound", message = $"Short code '{shortCode}' does not exist." });
+    }
+
+    // Capture HttpContext values BEFORE starting background task (HttpContext will be disposed after response)
+    var ipAddress = httpContext.Connection.RemoteIpAddress?.ToString() ?? "unknown";
+    var userAgent = httpContext.Request.Headers["User-Agent"].ToString() ?? "unknown";
+    var referrer = httpContext.Request.Headers["Referer"].ToString() ?? "";
+    var urlId = url.Id;
+
+    // Fire-and-forget visit tracking (non-blocking)
+    _ = Task.Run(async () =>
+    {
+        try
+        {
+            using var scope = scopeFactory.CreateScope();
+            var visitService = scope.ServiceProvider.GetRequiredService<IVisitService>();
+
+            var visit = new Visit
+            {
+                UrlId = urlId,
+                IpAddress = ipAddress,
+                UserAgent = userAgent,
+                Referrer = referrer,
+                Country = "", // TODO: GeoIP lookup in future iteration
+                VisitedAt = DateTime.UtcNow
+            };
+
+            await visitService.CreateVisitAsync(visit);
+        }
+        catch (Exception ex)
+        {
+            // Log but don't fail the redirect
+            Console.WriteLine($"Failed to track visit: {ex.Message}");
+        }
+    });
+
+    return Results.Redirect(url.OriginalUrl, permanent: false);
+})
+.WithName("RedirectToOriginalUrl")
+.WithTags("Redirect");
+
 app.MapControllers();
 
 app.Run();
+
+// Make Program accessible for integration testing
+public partial class Program { }
