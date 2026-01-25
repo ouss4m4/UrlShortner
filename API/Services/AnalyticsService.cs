@@ -3,56 +3,74 @@ using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
 using UrlShortner.API.Data;
-using UrlShortner.API.Models;
 
 namespace UrlShortner.API.Services
 {
+    // Analytics computed from Visit events in real-time
     public class AnalyticsService : IAnalyticsService
     {
         private readonly UrlShortnerDbContext _context;
+
         public AnalyticsService(UrlShortnerDbContext context)
         {
             _context = context;
         }
 
-        public async Task<Analytics> CreateAnalyticsAsync(Analytics analytics)
+        public async Task<UrlAnalytics> GetUrlAnalyticsAsync(int urlId)
         {
-            _context.Analytics.Add(analytics);
-            await _context.SaveChangesAsync();
-            return analytics;
+            var url = await _context.Urls.FindAsync(urlId);
+            if (url == null)
+            {
+                return new UrlAnalytics { UrlId = urlId };
+            }
+
+            var visits = await _context.Visits
+                .Where(v => v.UrlId == urlId)
+                .ToListAsync();
+
+            return new UrlAnalytics
+            {
+                UrlId = urlId,
+                ShortCode = url.ShortCode,
+                OriginalUrl = url.OriginalUrl,
+                TotalVisits = visits.Count,
+                FirstVisit = visits.Any() ? visits.Min(v => v.VisitedAt) : null,
+                LastVisit = visits.Any() ? visits.Max(v => v.VisitedAt) : null
+            };
         }
 
-        public async Task<Analytics?> GetAnalyticsByIdAsync(int id)
+        public async Task<IEnumerable<DateAnalytics>> GetAnalyticsByDateRangeAsync(DateTime startDate, DateTime endDate)
         {
-            return await _context.Analytics.FindAsync(id);
+            var visits = await _context.Visits
+                .Where(v => v.VisitedAt >= startDate && v.VisitedAt <= endDate)
+                .ToListAsync();
+
+            return visits
+                .GroupBy(v => v.VisitedAt.Date)
+                .Select(g => new DateAnalytics
+                {
+                    Date = g.Key,
+                    TotalVisits = g.Count(),
+                    UniqueIps = g.Select(v => v.IpAddress).Distinct().Count()
+                })
+                .OrderBy(a => a.Date)
+                .ToList();
         }
 
-        public async Task<IEnumerable<Analytics>> GetAnalyticsByDateAsync(System.DateTime date)
+        public async Task<IEnumerable<CountryAnalytics>> GetAnalyticsByCountryAsync()
         {
-            return await _context.Analytics.Where(a => a.StatDate.Date == date.Date).ToListAsync();
-        }
+            var visits = await _context.Visits.ToListAsync();
 
-        public async Task<IEnumerable<Analytics>> GetAnalyticsByCountryAsync(string country)
-        {
-            return await _context.Analytics.Where(a => a.Country == country).ToListAsync();
-        }
-
-        public async Task<Analytics?> UpdateAnalyticsAsync(Analytics analytics)
-        {
-            var existing = await _context.Analytics.FindAsync(analytics.Id);
-            if (existing == null) return null;
-            _context.Entry(existing).CurrentValues.SetValues(analytics);
-            await _context.SaveChangesAsync();
-            return existing;
-        }
-
-        public async Task<bool> DeleteAnalyticsAsync(int id)
-        {
-            var analytics = await _context.Analytics.FindAsync(id);
-            if (analytics == null) return false;
-            _context.Analytics.Remove(analytics);
-            await _context.SaveChangesAsync();
-            return true;
+            return visits
+                .Where(v => !string.IsNullOrEmpty(v.Country))
+                .GroupBy(v => v.Country)
+                .Select(g => new CountryAnalytics
+                {
+                    Country = g.Key,
+                    TotalVisits = g.Count()
+                })
+                .OrderByDescending(a => a.TotalVisits)
+                .ToList();
         }
     }
 }
