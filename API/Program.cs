@@ -16,6 +16,25 @@ builder.Services.AddScoped<IUserService, UserService>();
 builder.Services.AddScoped<IUrlService, UrlService>();
 builder.Services.AddScoped<IVisitService, VisitService>();
 builder.Services.AddScoped<IAnalyticsService, AnalyticsService>();
+builder.Services.AddScoped<IAnalyticsAggregator, AnalyticsAggregator>();
+
+// Register background service for hourly analytics aggregation
+builder.Services.AddHostedService<AnalyticsAggregationHostedService>();
+
+// TODO: To switch to Hangfire for better job management:
+// 1. Add NuGet packages: Hangfire.AspNetCore, Hangfire.PostgreSql
+// 2. Remove the line above: AddHostedService<AnalyticsAggregationHostedService>()
+// 3. Uncomment and configure Hangfire below:
+/*
+builder.Services.AddHangfire(config => config
+    .SetDataCompatibilityLevel(CompatibilityLevel.Version_180)
+    .UseSimpleAssemblyNameTypeSerializer()
+    .UseRecommendedSerializerSettings()
+    .UsePostgreSqlStorage(builder.Configuration.GetConnectionString("DefaultConnection")));
+builder.Services.AddHangfireServer();
+// After app.Run(), add: RecurringJob.AddOrUpdate<IAnalyticsAggregator>("analytics-aggregation", x => x.AggregateHourlyAnalyticsAsync(null), Cron.Hourly);
+// And add: app.UseHangfireDashboard(); (visit /hangfire to see dashboard)
+*/
 
 // Register GeoIP service with HttpClient
 builder.Services.AddHttpClient<IGeoIpService, IpApiGeoIpService>(client =>
