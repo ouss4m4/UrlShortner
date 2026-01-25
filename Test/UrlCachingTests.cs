@@ -110,7 +110,7 @@ public class UrlCachingTests : IAsyncLifetime
         await _urlService.GetUrlByShortCodeAsync(created.ShortCode);
         var cachedBefore = await _cacheService.GetAsync<Url>($"url:shortcode:{created.ShortCode}");
 
-        // Act - Update should invalidate cache
+        // Act - Update should invalidate old cache and warm up with new data
         created.OriginalUrl = "https://updated.com";
         await _urlService.UpdateUrlAsync(created);
 
@@ -118,7 +118,8 @@ public class UrlCachingTests : IAsyncLifetime
 
         // Assert
         Assert.NotNull(cachedBefore);
-        Assert.Null(cachedAfter); // Cache should be invalidated
+        Assert.NotNull(cachedAfter); // Cache should be warmed up with new data
+        Assert.Equal("https://updated.com", cachedAfter.OriginalUrl); // Updated value in cache
     }
 
     [Fact]
@@ -144,5 +145,106 @@ public class UrlCachingTests : IAsyncLifetime
         // Assert
         Assert.NotNull(cachedBefore);
         Assert.Null(cachedAfter); // Cache should be invalidated
+    }
+
+    [Fact]
+    public async Task CreateUrlAsync_WarmsUpCache()
+    {
+        // Arrange
+        var url = new Url
+        {
+            OriginalUrl = "https://warmup.com",
+            UserId = 1,
+            CreatedAt = DateTime.UtcNow
+        };
+
+        // Act - Create should proactively cache
+        var created = await _urlService.CreateUrlAsync(url);
+
+        // Check if it's in cache WITHOUT calling GetUrlByShortCodeAsync
+        var cached = await _cacheService.GetAsync<Url>($"url:shortcode:{created.ShortCode}");
+
+        // Assert
+        Assert.NotNull(cached);
+        Assert.Equal(created.Id, cached.Id);
+        Assert.Equal("https://warmup.com", cached.OriginalUrl);
+    }
+
+    [Fact]
+    public async Task UpdateUrlAsync_WarmsUpCache()
+    {
+        // Arrange
+        var url = new Url
+        {
+            OriginalUrl = "https://original.com",
+            UserId = 1
+        };
+        var created = await _urlService.CreateUrlAsync(url);
+
+        // Clear cache
+        await _cacheService.RemoveAsync($"url:shortcode:{created.ShortCode}");
+
+        // Act - Update should warm up cache with new data
+        created.OriginalUrl = "https://updated.com";
+        await _urlService.UpdateUrlAsync(created);
+
+        // Check cache WITHOUT calling GetUrlByShortCodeAsync
+        var cached = await _cacheService.GetAsync<Url>($"url:shortcode:{created.ShortCode}");
+
+        // Assert
+        Assert.NotNull(cached);
+        Assert.Equal("https://updated.com", cached.OriginalUrl);
+    }
+
+    [Fact]
+    public async Task CreateUrlAsync_UsesSmartTTL_WhenExpiryIsSet()
+    {
+        // Arrange - URL expires in 10 minutes
+        var url = new Url
+        {
+            OriginalUrl = "https://shortlived.com",
+            UserId = 1,
+            CreatedAt = DateTime.UtcNow,
+            Expiry = DateTime.UtcNow.AddMinutes(10)
+        };
+
+        // Act
+        var created = await _urlService.CreateUrlAsync(url);
+
+        // Get TTL from Redis
+        var redis = StackExchange.Redis.ConnectionMultiplexer.Connect("localhost:6379");
+        var db = redis.GetDatabase();
+        var ttl = await db.KeyTimeToLiveAsync($"url:shortcode:{created.ShortCode}");
+
+        // Assert - TTL should be around 10 minutes, not 1 hour
+        Assert.NotNull(ttl);
+        Assert.True(ttl.Value.TotalMinutes <= 10);
+        Assert.True(ttl.Value.TotalMinutes > 9); // Some tolerance for execution time
+    }
+
+    [Fact]
+    public async Task CreateUrlAsync_UsesDefaultTTL_WhenExpiryIsNull()
+    {
+        // Arrange - Permanent URL (no expiry)
+        var url = new Url
+        {
+            OriginalUrl = "https://permanent.com",
+            UserId = 1,
+            CreatedAt = DateTime.UtcNow,
+            Expiry = null
+        };
+
+        // Act
+        var created = await _urlService.CreateUrlAsync(url);
+
+        // Get TTL from Redis
+        var redis = StackExchange.Redis.ConnectionMultiplexer.Connect("localhost:6379");
+        var db = redis.GetDatabase();
+        var ttl = await db.KeyTimeToLiveAsync($"url:shortcode:{created.ShortCode}");
+
+        // Assert - TTL should be 1 hour (default)
+        Assert.NotNull(ttl);
+        Assert.True(ttl.Value.TotalMinutes >= 59); // Around 1 hour
+        Assert.True(ttl.Value.TotalMinutes <= 61);
     }
 }

@@ -26,6 +26,27 @@ namespace UrlShortner.API.Services
             _cacheService = cacheService;
         }
 
+        private TimeSpan CalculateCacheTTL(Url url)
+        {
+            // If URL has no expiry, use default 1 hour TTL
+            if (!url.Expiry.HasValue)
+            {
+                return CacheExpiration;
+            }
+
+            // Calculate time until URL expires
+            var timeUntilExpiry = url.Expiry.Value - DateTime.UtcNow;
+
+            // If already expired or expiring very soon, don't cache
+            if (timeUntilExpiry <= TimeSpan.Zero)
+            {
+                return TimeSpan.Zero;
+            }
+
+            // Use shorter of: default TTL or time until expiry
+            return timeUntilExpiry < CacheExpiration ? timeUntilExpiry : CacheExpiration;
+        }
+
         public async Task<Url> CreateUrlAsync(Url url)
         {
             try
@@ -53,6 +74,16 @@ namespace UrlShortner.API.Services
                 {
                     url.ShortCode = _shortCodeGenerator.Encode(url.Id);
                     await _context.SaveChangesAsync();
+                }
+
+                // Warm up cache with newly created URL
+                if (_cacheService != null && !string.IsNullOrEmpty(url.ShortCode))
+                {
+                    var ttl = CalculateCacheTTL(url);
+                    if (ttl > TimeSpan.Zero)
+                    {
+                        await _cacheService.SetAsync($"{CacheKeyPrefix}{url.ShortCode}", url, ttl);
+                    }
                 }
 
                 return url;
@@ -87,28 +118,56 @@ namespace UrlShortner.API.Services
 
                 if (cached != null)
                 {
+                    // Check if cached URL is expired
+                    if (cached.Expiry.HasValue && cached.Expiry.Value <= DateTime.UtcNow)
+                    {
+                        // Remove expired URL from cache
+                        await _cacheService.RemoveAsync(cacheKey);
+                        return null;
+                    }
                     return cached;
                 }
 
                 // Not in cache, get from DB
                 var url = await _context.Urls.FirstOrDefaultAsync(u => u.ShortCode == shortCode);
 
-                // Cache for future requests
+                // Check if URL is expired
+                if (url != null && url.Expiry.HasValue && url.Expiry.Value <= DateTime.UtcNow)
+                {
+                    return null; // Expired URL
+                }
+
+                // Cache for future requests (only if not expired)
                 if (url != null)
                 {
-                    await _cacheService.SetAsync(cacheKey, url, CacheExpiration);
+                    var ttl = CalculateCacheTTL(url);
+                    if (ttl > TimeSpan.Zero)
+                    {
+                        await _cacheService.SetAsync(cacheKey, url, ttl);
+                    }
                 }
 
                 return url;
             }
 
             // No cache service, just query DB
-            return await _context.Urls.FirstOrDefaultAsync(u => u.ShortCode == shortCode);
+            var result = await _context.Urls.FirstOrDefaultAsync(u => u.ShortCode == shortCode);
+
+            // Check if URL is expired
+            if (result != null && result.Expiry.HasValue && result.Expiry.Value <= DateTime.UtcNow)
+            {
+                return null; // Expired URL
+            }
+
+            return result;
         }
 
         public async Task<IEnumerable<Url>> GetUrlsByUserIdAsync(int userId)
         {
-            return await _context.Urls.Where(u => u.UserId == userId).ToListAsync();
+            var urls = await _context.Urls.Where(u => u.UserId == userId).ToListAsync();
+
+            // Filter out expired URLs
+            return urls.Where(u => !u.Expiry.HasValue || u.Expiry.Value > DateTime.UtcNow);
         }
 
         public async Task<Url?> UpdateUrlAsync(Url url)
@@ -116,7 +175,7 @@ namespace UrlShortner.API.Services
             var existing = await _context.Urls.FindAsync(url.Id);
             if (existing == null) return null;
 
-            // Invalidate cache before updating
+            // Invalidate old cache before updating
             if (_cacheService != null && !string.IsNullOrEmpty(existing.ShortCode))
             {
                 await _cacheService.RemoveAsync($"{CacheKeyPrefix}{existing.ShortCode}");
@@ -124,6 +183,17 @@ namespace UrlShortner.API.Services
 
             _context.Entry(existing).CurrentValues.SetValues(url);
             await _context.SaveChangesAsync();
+
+            // Warm up cache with updated URL
+            if (_cacheService != null && !string.IsNullOrEmpty(existing.ShortCode))
+            {
+                var ttl = CalculateCacheTTL(existing);
+                if (ttl > TimeSpan.Zero)
+                {
+                    await _cacheService.SetAsync($"{CacheKeyPrefix}{existing.ShortCode}", existing, ttl);
+                }
+            }
+
             return existing;
         }
 

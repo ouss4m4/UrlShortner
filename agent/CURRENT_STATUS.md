@@ -1,7 +1,7 @@
 # Current Status - URL Shortener Project
 
-**Last Updated:** January 24, 2026  
-**Current Phase:** Redis Caching Integration Complete
+**Last Updated:** January 25, 2026  
+**Current Phase:** Core Features Complete + Swagger Documentation
 
 ## ✅ Completed Features
 
@@ -13,12 +13,12 @@
 - ✅ Unique index on ShortCode column
 - ✅ **Redis connection & configuration**
 
-### 2. Core Entities (Full CRUD)
+### 2. Core Entities & Services
 
 - ✅ User (CRUD operations)
 - ✅ URL (CRUD operations with caching)
-- ✅ Visit (tracking)
-- ✅ Analytics (CRUD operations)
+- ✅ Visit (event-based tracking with fire-and-forget)
+- ✅ Analytics (read-only computed views + background aggregation)
 
 ### 3. URL Shortening Features
 
@@ -28,10 +28,20 @@
 - ✅ **Duplicate detection** with pre-insert check
 - ✅ **Error handling** (409 Conflict for collisions)
 - ✅ **URL expansion** by short code with Redis caching
-- ✅ **Redirect endpoint** (GET /api/url/redirect/{shortCode} → 302)
+- ✅ **Root redirect endpoint** (GET /{shortCode} → 302)
 - ✅ **Cache invalidation** on URL updates/deletes
+- ✅ **URL expiration/TTL** (time-to-live for short URLs)
 
-### 4. Redis Caching Layer
+### 4. Visit Tracking & Analytics
+
+- ✅ **Fire-and-forget visit capture** (non-blocking with Task.Run)
+- ✅ **Structured visit metadata** (IpAddress, UserAgent, Country, Referrer)
+- ✅ **GeoIP integration** (IP-API service with provider abstraction)
+- ✅ **Computed analytics** (real-time aggregation from Visit events)
+- ✅ **Background hourly aggregation** (IHostedService with Hangfire migration path)
+- ✅ **Analytics endpoints** (by URL, date range, country)
+
+### 5. Redis Caching Layer
 
 - ✅ **ICacheService interface** (Get, Set, Remove, Exists)
 - ✅ **RedisCacheService implementation** using StackExchange.Redis
@@ -41,33 +51,51 @@
 - ✅ **JSON serialization** for cached objects
 - ✅ **Dependency injection** configured (optional in tests)
 
-### 4. API Endpoints
+### 6. API Documentation
+
+- ✅ **Swagger/OpenAPI** integration (Swashbuckle.AspNetCore)
+- ✅ **Interactive API UI** at /swagger
+- ✅ **OpenAPI spec** at /swagger/v1/swagger.json
+
+### 7. API Endpoints
 
 ```
-POST   /api/url              - Create URL (auto-gen or custom short code)
-GET    /api/url/{id}         - Get URL by ID
-GET    /api/url/short/{code} - Get URL by short code
-GET    /api/url/redirect/{code} - Redirect to original URL (302)
+# Core Endpoints
+GET    /{shortCode}           - Root redirect to original URL (302)
+
+# URL Management
+POST   /api/url               - Create URL (auto-gen or custom short code)
+GET    /api/url/{id}          - Get URL by ID
+GET    /api/url/short/{code}  - Get URL by short code
 GET    /api/url/user/{userId} - Get all URLs for a user
-PUT    /api/url/{id}         - Update URL
-DELETE /api/url/{id}         - Delete URL
+PUT    /api/url/{id}          - Update URL
+DELETE /api/url/{id}          - Delete URL
 
-+ Similar endpoints for User, Visit, Analytics
+# Analytics (Read-Only)
+GET    /api/analytics/url/{urlId}      - Get analytics for specific URL
+GET    /api/analytics/date             - Get analytics by date range
+GET    /api/analytics/country          - Get analytics by country
+
+# User Management
+POST   /api/user              - Create user
+GET    /api/user/{id}         - Get user by ID
+PUT    /api/user/{id}         - Update user
+DELETE /api/user/{id}         - Delete user
 ```
 
-### 5. Test Coverage
+### 8. Test Coverage
 
-**44 tests passing** (~1.6s execution):
+**46 tests passing** (~1.7s execution):
 
 - CacheServiceTests: 6 tests (Redis Get/Set/Remove/Exists)
 - UrlCachingTests: 4 tests (cache hit/miss, invalidation)
+- UrlExpirationTests: 5 tests (expired URLs, null expiry, user filtering)
 - ShortCodeGeneratorTests: 6 tests
 - UrlCrudTests: 8 tests
 - UrlControllerTests: 3 tests
 - UrlRedirectTests: 3 tests
 - UserCrudTests: 4 tests
-- VisitCrudTests: 3 tests
-- AnalyticsCrudTests: 3 tests
+- AnalyticsCrudTests: 4 tests
 - ModelExistenceTests: 4 tests
 
 **Test Strategy:**
@@ -77,58 +105,62 @@ DELETE /api/url/{id}         - Delete URL
 - No mocks - tests exercise actual service/repository patterns
 - Fast, isolated, and reliable
 
+## 🎯 Roadmap - Next Features
+
+### Phase 1: Advanced URL Features
+
+- ✅ **URL expiration** - Time-to-live for short URLs
+- [ ] **Custom short codes** - User-specified vanity URLs (enhanced validation)
+- [ ] **URL categories/tags** - Organize URLs by topic
+- [ ] **Bulk URL creation** - Import multiple URLs at once
+
+### Phase 2: Rate Limiting & Security
+
+- [ ] **Rate limiting middleware** - Per-IP limits for URL creation
+- [ ] **Request throttling** - 429 Too Many Requests responses
+- [ ] **Input validation** - URL format, length, malicious content checks
+- [ ] **HTTPS enforcement** - Redirect HTTP to HTTPS
+- [ ] **CORS policy** - Configure allowed origins
+
+### Phase 3: Authentication & Authorization
+
+- [ ] **JWT authentication** - Token-based auth
+- [ ] **User registration/login** - AuthController endpoints
+- [ ] **Protected endpoints** - Users manage only their own URLs
+- [ ] **Admin role** - Full analytics access
+- [ ] **Password hashing** - Secure credential storage
+
+### Phase 4: Production Readiness
+
+- [ ] **Health check endpoints** - /health for monitoring
+- [ ] **Structured logging** - Serilog integration
+- [ ] **Application monitoring** - Application Insights or similar
+- [ ] **Database connection pooling** - Optimize connections
+- [ ] **Deployment scripts** - CI/CD pipeline
+- [ ] **Performance testing** - Load testing with k6 or similar
+
+---
+
+## 🚀 Completed Recently
+
+- ✅ Visit tracking refactor (fire-and-forget event capture)
+- ✅ Analytics refactor (computed views from Visit events)
+- ✅ GeoIP integration (IP-API service)
+- ✅ Background analytics aggregation (IHostedService)
+- ✅ Swagger/OpenAPI documentation
+
+---
+
 ## 🎯 Next Steps (In Priority Order)
 
-### 1. Visit Tracking Enhancement [NEXT]
-
-- Record visitor info on redirect (IP, User-Agent, Country)
-- Use GeoIP library for country detection
-- Save to Visit entity
-- Update Analytics aggregates
-
-### 2. Rate Limiting
-
-- Record visitor info on redirect (IP, User-Agent, Country)
-- Use GeoIP library for country detection
-- Save to Visit entity
-- Update Analytics aggregates
-
-### 3. Rate Limiting
-
-- Add rate limiting middleware
-- Per-IP limits for URL creation
-- Per-user limits for authenticated requests
-- Return 429 Too Many Requests
-
-### 4. Swagger/OpenAPI Documentation
-
-- Add Swashbuckle.AspNetCore
-- Document all endpoints
-- Add request/response examples
-- API authentication documentation
-
-### 5. Authentication & Authorization
-
-- Add JWT authentication
-- User registration/login
-- Protected endpoints (user's own URLs only)
-- Admin role for analytics access
-
-### 6. Production Readiness
-
-- Dockerize the application
-- Health check endpoints
-- Logging (Serilog)
-- Application Insights / monitoring
-- Database connection pooling
-- Deployment scripts
+---
 
 ## 📊 Project Metrics
 
-- **Total Tests:** 44 (all passing)
-- **Test Execution Time:** ~1.6 seconds
+- **Total Tests:** 46 (all passing)
+- **Test Execution Time:** ~1.7 seconds
 - **Code Coverage:** Core business logic fully tested
-- **Dependencies:** StackExchange.Redis 2.10.1, EF Core 10.0.2, Npgsql 10.0.0
+- **Dependencies:** StackExchange.Redis 2.10.1, EF Core 10.0.2, Npgsql 10.0.0, Swashbuckle.AspNetCore 10.1.0
 
 ## 🏗️ Technical Architecture
 
@@ -148,6 +180,20 @@ Controllers → Services (Business Logic) → Data (EF Core) → Database (Postg
 - **Invalidation:** On update/delete operations
 - **Serialization:** System.Text.Json
 
+### Visit Tracking
+
+- **Pattern:** Fire-and-forget (non-blocking)
+- **Execution:** Task.Run with IServiceScopeFactory
+- **Data Captured:** IP, UserAgent, Country, Referrer
+- **GeoIP:** IP-API service (5s timeout)
+
+### Analytics
+
+- **Real-time:** Computed from Visit queries
+- **Aggregation:** Hourly background service (IHostedService)
+- **Storage:** Analytics table with pre-aggregated data
+- **Migration Path:** Hangfire for production scalability
+
 ### Database
 
 - **Primary:** PostgreSQL 15 (via Docker)
@@ -161,44 +207,8 @@ Controllers → Services (Business Logic) → Data (EF Core) → Database (Postg
 - **Client:** StackExchange.Redis 2.10.1
 - **Connection:** Singleton IConnectionMultiplexer
 - **Service:** Singleton ICacheService
-- **Test Execution Time:** ~220ms
-- **Build Warnings:** 1 (harmless EF Core version mismatch)
-- **API Endpoints:** 24+ (CRUD for 4 entities)
-- **Lines of Test Code:** ~1,500+
-- **Lines of Production Code:** ~1,000+
 
-## 🏗️ Architecture
-
-```
-Controllers (REST API)
-    ↓
-Services (Business Logic)
-    ↓
-Data Layer (EF Core)
-    ↓
-Database (Postgres)
-
-Utilities:
-- ShortCodeGenerator (Base62 encoding)
-- Future: CacheService (Redis)
-- Future: RateLimitingMiddleware
-```
-
-## 🐛 Known Issues
-
-- None currently! All 34 tests passing.
-
-## 📝 Documentation
-
-All documentation is up to date:
-
-- `/agent/instructions.md` - Setup and development guide
-- `/agent/prd.md` - Product requirements
-- `/agent/process.md` - TDD process and current iteration
-- `/agent/requirements.md` - Technical requirements
-- `/agent/steps.md` - Roadmap with completion status
-- `/agent/test-strategy.md` - Testing approach
-- `/agent/CURRENT_STATUS.md` - This file
+---
 
 ## 🚀 How to Run
 
@@ -211,24 +221,27 @@ cd API
 dotnet ef database update
 
 # Run tests
-dotnet test API/API.sln
+dotnet test
 
 # Run API
 cd API
 dotnet run
 
-# API available at: https://localhost:7000
+# API available at: http://localhost:5011
+# Swagger UI at: http://localhost:5011/swagger
 ```
-
-## ✨ Key Design Decisions
-
-1. **Insert-then-generate approach**: URL gets ID first, then short code is generated from ID
-2. **Unique per creation**: Each URL creation gets its own short code (privacy + ownership)
-3. **Custom aliases supported**: Users can provide their own short codes
-4. **Collision detection**: Pre-insert check + database constraint for safety
-5. **User-friendly errors**: 409 Conflict with structured JSON for UI display
-6. **Test coverage**: Real integration tests, no mocks, fast execution
 
 ---
 
-**Status:** ✅ Core features complete and tested. Ready for Redis caching integration!
+## ✨ Key Design Decisions
+
+1. **Event-driven visit tracking**: Fire-and-forget capture without blocking redirects
+2. **Computed analytics**: Real-time aggregation with background hourly pre-computation
+3. **Cache-aside pattern**: Lazy loading with explicit invalidation
+4. **Provider abstraction**: IGeoIpService allows swapping GeoIP providers
+5. **IHostedService**: Simple background processing with Hangfire migration path
+6. **Strict TDD**: All features tested first (RED-GREEN-REFACTOR)
+
+---
+
+**Status:** ✅ Core features complete with analytics, caching, GeoIP, and API documentation!

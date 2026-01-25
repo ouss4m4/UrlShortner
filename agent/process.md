@@ -20,162 +20,148 @@ This project follows a strict test-driven development (TDD) workflow. For each t
 
 ## Current Iteration
 
-**Completed: January 24, 2026 - Redis Caching Integration** ✅
+**Completed: January 25, 2026 - URL Expiration (Phase 1.1)** ✅
 
-Successfully implemented Redis caching following strict TDD process!
+Successfully implemented URL expiration following strict TDD process!
 
 ## Last completed step
 
-**Iteration completed: January 24, 2026 - Redis Caching Integration**
+**Iteration completed: January 25, 2026 - URL Expiration Feature**
 
-Following strict TDD process for Redis integration:
+Following strict TDD process (RED-GREEN-REFACTOR):
 
-1. ✅ **Created ICacheService interface** (API/Services/ICacheService.cs)
-   - GetAsync<T>, SetAsync<T>, RemoveAsync, ExistsAsync methods
-2. ✅ **Wrote 6 cache service tests** (TDD RED phase)
-   - Test/CacheServiceTests.cs created with 6 tests for Redis operations
-   - Tests use real Redis (Docker) with FLUSHDB cleanup
-3. ✅ **Implemented RedisCacheService** (TDD GREEN phase)
-   - API/Services/RedisCacheService.cs using StackExchange.Redis
-   - JSON serialization for cached objects
-   - Proper handling of nullable TimeSpan expiration
-4. ✅ **Wrote 4 URL caching integration tests** (TDD RED phase)
-   - Test/UrlCachingTests.cs created
-   - Tests for cache hit, cache miss, update invalidation, delete invalidation
-5. ✅ **Integrated caching into UrlService** (TDD GREEN phase)
+1. ✅ **Wrote 5 expiration tests** (TDD RED phase)
+   - Test/UrlExpirationTests.cs created
+   - GetUrlByShortCodeAsync_ReturnsNull_WhenUrlIsExpired
+   - GetUrlByShortCodeAsync_ReturnsUrl_WhenUrlIsNotExpired
+   - GetUrlByShortCodeAsync_ReturnsUrl_WhenExpiryIsNull
+   - GetUrlsByUserIdAsync_ExcludesExpiredUrls
+   - CreateUrlAsync_AcceptsExpiryDate
+
+2. ✅ **Confirmed tests fail** (RED phase confirmed)
+   - 2 tests failed as expected
+   - Service not checking expiry dates yet
+
+3. ✅ **Implemented expiration logic** (TDD GREEN phase)
    - Modified API/Services/UrlService.cs
-   - Cache-aside pattern for GetUrlByShortCodeAsync
-   - Cache key format: `url:shortcode:{code}`
-   - 1-hour TTL on cached entries
-   - Cache invalidation on UpdateUrlAsync and DeleteUrlAsync
-   - Optional ICacheService (null-safe for tests without cache)
-6. ✅ **Registered Redis in DI**:
-   - Modified API/Program.cs
-   - IConnectionMultiplexer registered as Singleton
-   - ICacheService registered as Singleton
-   - Configuration from appsettings.json (RedisConnection string)
-   - Only registered in non-test environments
-7. ✅ **Installed StackExchange.Redis package**:
-   - Added to API project: 2.10.1
-   - Added to Test project: 2.10.1
-8. ✅ **All 44 tests passing!** (up from 34)
-   - 6 new CacheServiceTests
-   - 4 new UrlCachingTests
+   - Added expiry checking in GetUrlByShortCodeAsync (both cached and DB paths)
+   - Added expiry filtering in GetUrlsByUserIdAsync
+   - Expired URLs return null (treated as not found)
+   - Cache invalidation for expired URLs
+
+4. ✅ **All 46 tests passing!** (up from 41)
+   - 5 new UrlExpirationTests
    - All existing tests still pass
+   - Test execution: ~1.7s
+
+**Implementation Details:**
+
+```csharp
+// Check if URL is expired
+if (url.Expiry.HasValue && url.Expiry.Value <= DateTime.UtcNow)
+{
+    return null; // Treat expired URLs as not found
+}
+```
+
+**Features:**
+
+- URLs with null Expiry never expire (permanent)
+- URLs with Expiry in the past return null (410 Gone semantically)
+- Expired URLs excluded from user listings
+- Cache automatically invalidates expired URLs
+- Expiry field already existed in Url model (no migration needed)
 
 **Files Created:**
 
-- API/Services/ICacheService.cs (interface)
-- API/Services/RedisCacheService.cs (implementation)
-- Test/CacheServiceTests.cs (6 tests)
-- Test/UrlCachingTests.cs (4 tests)
+- Test/UrlExpirationTests.cs (5 tests)
 
 **Files Modified:**
 
-- API/Services/UrlService.cs (added caching logic)
-- API/Program.cs (registered Redis services)
-- API/appsettings.json (added RedisConnection string)
-- API/UrlShortner.csproj (added StackExchange.Redis)
-- Test/Test.csproj (added StackExchange.Redis)
-
-**Caching Implementation Details:**
-
-```csharp
-// Cache-aside pattern in GetUrlByShortCodeAsync
-var cacheKey = $"url:shortcode:{shortCode}";
-var cached = await _cacheService.GetAsync<Url>(cacheKey);
-if (cached != null) return cached;
-
-var url = await _context.Urls.FirstOrDefaultAsync(...);
-if (url != null)
-{
-    await _cacheService.SetAsync(cacheKey, url, TimeSpan.FromHours(1));
-}
-return url;
-```
-
-**Previous Iteration: Collision Detection & Error Handling**
-
-Following strict TDD process for short code collision handling:
-
-1. ✅ **Added collision detection test** (TDD RED phase)
-   - ThrowsExceptionWhenCustomShortCodeAlreadyExists test in UrlCrudTests
-2. ✅ **Implemented duplicate short code detection** (TDD GREEN phase)
-   - Pre-insert check for existing short codes in UrlService
-   - Throws InvalidOperationException with clear message
-   - Works with both InMemory (tests) and Postgres (production) databases
-   - Also catches DbUpdateException for database-level unique constraint violations
-3. ✅ **Added controller error handling**:
-   - Try-catch block in UrlController.Create()
-   - Returns 409 Conflict status code with structured JSON error
-   - Error includes: error code, message, and shortCode fields
-4. ✅ **Created UrlControllerTests.cs** with 3 integration tests:
-   - CreateReturns409ConflictWhenShortCodeExists
-   - CreateReturns201CreatedWhenShortCodeIsUnique
-   - CreateAutoGeneratesShortCodeWhenEmpty
-5. ✅ **All 34 tests passing!** (up from 30)
-
-**Files Created/Modified:**
-
-- Modified: API/Services/UrlService.cs (added duplicate detection)
-- Modified: API/Controllers/UrlController.cs (added error handling)
-- Modified: Test/UrlCrudTests.cs (added collision test)
-- Created: Test/UrlControllerTests.cs (3 new controller tests)
-
-**Error Response Format for UI:**
-
-```json
-HTTP 409 Conflict
-{
-  "error": "ShortCodeAlreadyExists",
-  "message": "Short code 'fb' is already taken. Please choose a different short code.",
-  "shortCode": "fb"
-}
-```
-
-**Previous Iteration: URL Shortening & Redirect Implementation**
-
-1. ✅ Created IShortCodeGenerator interface with Encode/Decode methods
-2. ✅ Wrote 6 tests for base62 encoding (TDD RED phase)
-3. ✅ Implemented ShortCodeGenerator with base62 algorithm (TDD GREEN phase)
-4. ✅ Integrated into UrlService (auto-generates short codes from URL ID)
-5. ✅ Updated all UrlCrudTests + added 2 new tests
-6. ✅ Created UrlRedirectTests.cs with 3 tests
-7. ✅ Added redirect endpoint (GET /api/url/redirect/{shortCode})
-8. ✅ Registered ShortCodeGenerator in DI as Singleton
-9. ✅ All 30 tests passing
-
-## Current Status
-
-- **Where we are**: Redis caching integration complete! **44 real integration tests passing**.
-- **Features Complete**:
-  - ✅ Base62 short code generation (0-9, a-z, A-Z)
-  - ✅ Auto-generated short codes from database IDs
-  - ✅ Manual/custom short code support (aliases)
-  - ✅ Duplicate short code detection with user-friendly errors
-  - ✅ URL expansion by short code **with Redis caching**
-  - ✅ Redirect endpoint (302 to original URL)
-  - ✅ Proper error handling (409 Conflict for duplicates)
-  - ✅ **Redis cache-aside pattern for fast lookups**
-  - ✅ **Automatic cache invalidation on updates/deletes**
-  - ✅ **1-hour TTL on cached URL records**
-- **Test Coverage**: 44 tests across 10 test files
-  - All tests use real InMemory database (no mocks)
-  - Cache tests use real Redis (Docker)
-  - Fast execution (~1.6s total)
-  - Comprehensive coverage: CRUD + shortening + redirect + error handling + caching
-- **Performance**:
-  - First lookup: ~10-20ms (database query + cache write)
-  - Subsequent lookups: ~1-2ms (Redis cache hit)
-  - 10x-20x performance improvement for repeated short code lookups!
-- **What's next**:
-  1. **[NEXT]** Add visit tracking on redirect (record IP, browser, country)
-  2. Add GeoIP library for country detection
-  3. Add basic rate limiting middleware
-  4. Add Swagger/OpenAPI documentation
-  5. Add authentication and admin features
-- **Blockers**: None. Caching layer complete, ready for visit tracking.
+- API/Services/UrlService.cs (added expiration checking)
 
 ---
 
-**Note:** The agent must always use and update this process.md and steps.md on every iteration. This is mandatory for all work, not optional.
+**Iteration completed: January 25, 2026 - Multiple Core Features**
+
+Major refactoring and feature additions:
+
+1. ✅ **Visit Tracking Refactor** (Event-Driven Architecture)
+   - Changed from CRUD to fire-and-forget event capture
+   - Deleted VisitController.cs (no longer needed)
+   - Enhanced Visit model with structured fields: IpAddress, UserAgent, Country, Referrer
+   - Implemented Task.Run with IServiceScopeFactory for non-blocking capture
+   - Created EnhanceVisitModel migration
+
+2. ✅ **Analytics Refactor** (Computed Views)
+   - Changed from CRUD to read-only computed views
+   - Refactored IAnalyticsService with DTO-based responses
+   - Implemented real-time aggregation from Visit queries
+   - Endpoints: by URL, by date range, by country
+
+3. ✅ **GeoIP Integration**
+   - Created IGeoIpService abstraction (provider pattern)
+   - Implemented IpApiGeoIpService using IP-API.com
+   - Integrated into visit tracking at root redirect endpoint
+   - HttpClient with 5s timeout
+   - Smart filtering for localhost/private IPs
+
+4. ✅ **Background Analytics Aggregation**
+   - Created IAnalyticsAggregator interface (scheduler-agnostic)
+   - Implemented AnalyticsAggregator (groups by hour/country)
+   - Created AnalyticsAggregationHostedService (IHostedService)
+   - Runs every hour (10s startup delay)
+   - Documented Hangfire migration path in code comments
+
+5. ✅ **Swagger/OpenAPI Documentation**
+   - Added Swashbuckle.AspNetCore 10.1.0
+   - Configured SwaggerGen and SwaggerUI
+   - Swagger UI available at /swagger
+   - OpenAPI spec at /swagger/v1/swagger.json
+
+**Files Created:**
+
+- API/Services/IGeoIpService.cs
+- API/Services/IpApiGeoIpService.cs
+- API/Services/IAnalyticsAggregator.cs
+- API/Services/AnalyticsAggregator.cs
+- API/Services/AnalyticsAggregationHostedService.cs
+- API/Migrations/20260125102559_EnhanceVisitModel.cs
+
+**Files Modified:**
+
+- API/Models/Visit.cs (added structured fields)
+- API/Services/IAnalyticsService.cs (refactored to DTOs)
+- API/Services/AnalyticsService.cs (compute from Visit queries)
+- API/Controllers/AnalyticsController.cs (read-only endpoints)
+- API/Program.cs (root redirect, GeoIP, aggregation, Swagger)
+
+**Files Deleted:**
+
+- API/Controllers/VisitController.cs
+- Test/VisitCrudTests.cs
+- Test/RootRedirectTests.cs
+
+**All 41 tests passing!**
+
+## Current Status
+
+- **Where we are**: Phase 1.1 complete - URL expiration implemented! **46 real integration tests passing**.
+- **Features Complete**:
+  - ✅ Base62 short code generation
+  - ✅ Auto-generated + custom short codes
+  - ✅ Root redirect endpoint (/{shortCode})
+  - ✅ Fire-and-forget visit tracking (non-blocking)
+  - ✅ GeoIP integration (IP-API)
+  - ✅ Real-time computed analytics
+  - ✅ Background hourly aggregation (IHostedService)
+  - ✅ Redis caching with invalidation
+  - ✅ Swagger/OpenAPI documentation
+  - ✅ **URL expiration/TTL (time-to-live)**
+- **Test Coverage**: 46 tests (all passing, ~1.7s)
+- **What's next**: Phase 1 remaining features (custom short codes, tags, bulk creation)
+- **Blockers**: None
+
+---
+
+**Note:** The agent must always use and update this process.md on every iteration. This is mandatory for all work, not optional.
