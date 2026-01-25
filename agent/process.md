@@ -20,15 +20,17 @@ This project follows a strict test-driven development (TDD) workflow. For each t
 
 ## Current Iteration
 
-**Completed: January 25, 2026 - URL Expiration (Phase 1.1)** ✅
+**Completed: January 25, 2026 - URL Expiration + Smart Cache TTL & Warmup (Phase 1.1)** ✅
 
-Successfully implemented URL expiration following strict TDD process!
+Successfully implemented URL expiration with intelligent caching following strict TDD process!
 
 ## Last completed step
 
-**Iteration completed: January 25, 2026 - URL Expiration Feature**
+**Iteration completed: January 25, 2026 - URL Expiration + Cache Enhancements**
 
 Following strict TDD process (RED-GREEN-REFACTOR):
+
+### Part 1: URL Expiration
 
 1. ✅ **Wrote 5 expiration tests** (TDD RED phase)
    - Test/UrlExpirationTests.cs created
@@ -49,34 +51,66 @@ Following strict TDD process (RED-GREEN-REFACTOR):
    - Expired URLs return null (treated as not found)
    - Cache invalidation for expired URLs
 
-4. ✅ **All 46 tests passing!** (up from 41)
-   - 5 new UrlExpirationTests
-   - All existing tests still pass
+### Part 2: Smart Cache TTL & Warmup
+
+4. ✅ **Wrote 4 cache enhancement tests** (TDD RED phase)
+   - Test/UrlCachingTests.cs updated
+   - CreateUrlAsync_WarmsUpCache
+   - UpdateUrlAsync_WarmsUpCache
+   - CreateUrlAsync_UsesSmartTTL_WhenExpiryIsSet
+   - CreateUrlAsync_UsesDefaultTTL_WhenExpiryIsNull
+
+5. ✅ **Confirmed new tests fail** (RED phase confirmed)
+   - 4 new tests failed as expected
+   - No cache warmup or smart TTL yet
+
+6. ✅ **Implemented cache enhancements** (TDD GREEN phase)
+   - Added CalculateCacheTTL() private method
+   - Smart TTL: uses shorter of 1 hour OR time until expiry
+   - Cache warmup in CreateUrlAsync (proactive caching)
+   - Cache warmup in UpdateUrlAsync (invalidate + warm up)
+   - Updated GetUrlByShortCodeAsync to use smart TTL
+
+7. ✅ **All 50 tests passing!** (up from 46)
+   - 4 new cache enhancement tests
+   - Updated 1 existing test (UpdateUrlAsync now warms cache)
    - Test execution: ~1.7s
 
 **Implementation Details:**
 
 ```csharp
-// Check if URL is expired
-if (url.Expiry.HasValue && url.Expiry.Value <= DateTime.UtcNow)
+private TimeSpan CalculateCacheTTL(Url url)
 {
-    return null; // Treat expired URLs as not found
+    if (!url.Expiry.HasValue) return CacheExpiration; // 1 hour default
+    
+    var timeUntilExpiry = url.Expiry.Value - DateTime.UtcNow;
+    if (timeUntilExpiry <= TimeSpan.Zero) return TimeSpan.Zero; // Don't cache expired
+    
+    return timeUntilExpiry < CacheExpiration ? timeUntilExpiry : CacheExpiration;
 }
 ```
 
 **Features:**
-
-- URLs with null Expiry never expire (permanent)
-- URLs with Expiry in the past return null (410 Gone semantically)
-- Expired URLs excluded from user listings
-- Cache automatically invalidates expired URLs
-- Expiry field already existed in Url model (no migration needed)
+- ✅ URLs with null Expiry never expire (permanent)
+- ✅ Expired URLs return null (treated as not found)
+- ✅ Expired URLs excluded from user listings
+- ✅ **Smart cache TTL** - respects URL expiry time
+- ✅ **Cache warmup on create** - new URLs proactively cached
+- ✅ **Cache warmup on update** - updated URLs immediately cached
+- ✅ **Lazy loading still works** - first read caches with smart TTL
 
 **Files Created:**
-
 - Test/UrlExpirationTests.cs (5 tests)
 
 **Files Modified:**
+- API/Services/UrlService.cs (expiration + smart TTL + warmup)
+- Test/UrlCachingTests.cs (4 new tests, 1 updated test)
+
+**Documentation Cleanup:**
+- Deleted 9 redundant files (ITERATION_7_PLAN.md, RESUME.md, WHAT_NEXT.md, etc.)
+- Kept 4 essential files (process.md, requirements.md, ARCHITECTURE.md, CURRENT_STATUS.md)
+
+---
 
 - API/Services/UrlService.cs (added expiration checking)
 
@@ -146,7 +180,7 @@ Major refactoring and feature additions:
 
 ## Current Status
 
-- **Where we are**: Phase 1.1 complete - URL expiration implemented! **46 real integration tests passing**.
+- **Where we are**: Phase 1.1 complete - URL expiration + smart cache TTL & warmup! **50 real integration tests passing**.
 - **Features Complete**:
   - ✅ Base62 short code generation
   - ✅ Auto-generated + custom short codes
@@ -158,8 +192,10 @@ Major refactoring and feature additions:
   - ✅ Redis caching with invalidation
   - ✅ Swagger/OpenAPI documentation
   - ✅ **URL expiration/TTL (time-to-live)**
-- **Test Coverage**: 46 tests (all passing, ~1.7s)
-- **What's next**: Phase 1 remaining features (custom short codes, tags, bulk creation)
+  - ✅ **Smart cache TTL (respects URL expiry)**
+  - ✅ **Cache warmup on create/update (proactive caching)**
+- **Test Coverage**: 50 tests (all passing, ~1.7s)
+- **What's next**: Phase 1 remaining features (custom short codes validation, tags, bulk creation)
 - **Blockers**: None
 
 ---

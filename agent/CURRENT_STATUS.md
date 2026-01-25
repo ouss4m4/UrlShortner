@@ -46,7 +46,9 @@
 - ✅ **ICacheService interface** (Get, Set, Remove, Exists)
 - ✅ **RedisCacheService implementation** using StackExchange.Redis
 - ✅ **Cache-aside pattern** for GetUrlByShortCodeAsync
-- ✅ **1-hour TTL** on cached URL records
+- ✅ **Smart TTL** - respects URL expiry (cache until expiry, max 1 hour)
+- ✅ **Cache warmup on create** - new URLs proactively cached
+- ✅ **Cache warmup on update** - updated URLs immediately cached
 - ✅ **Cache invalidation** on UpdateUrlAsync and DeleteUrlAsync
 - ✅ **JSON serialization** for cached objects
 - ✅ **Dependency injection** configured (optional in tests)
@@ -85,10 +87,10 @@ DELETE /api/user/{id}         - Delete user
 
 ### 8. Test Coverage
 
-**46 tests passing** (~1.7s execution):
+**50 tests passing** (~1.7s execution):
 
 - CacheServiceTests: 6 tests (Redis Get/Set/Remove/Exists)
-- UrlCachingTests: 4 tests (cache hit/miss, invalidation)
+- UrlCachingTests: 8 tests (cache hit/miss, invalidation, warmup, smart TTL)
 - UrlExpirationTests: 5 tests (expired URLs, null expiry, user filtering)
 - ShortCodeGeneratorTests: 6 tests
 - UrlCrudTests: 8 tests
@@ -157,7 +159,7 @@ DELETE /api/user/{id}         - Delete user
 
 ## 📊 Project Metrics
 
-- **Total Tests:** 46 (all passing)
+- **Total Tests:** 50 (all passing)
 - **Test Execution Time:** ~1.7 seconds
 - **Code Coverage:** Core business logic fully tested
 - **Dependencies:** StackExchange.Redis 2.10.1, EF Core 10.0.2, Npgsql 10.0.0, Swashbuckle.AspNetCore 10.1.0
