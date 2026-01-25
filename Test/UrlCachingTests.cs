@@ -7,6 +7,7 @@ using Xunit;
 
 namespace Test;
 
+[Collection("Redis Tests")]
 public class UrlCachingTests : IAsyncLifetime
 {
     private readonly UrlShortnerDbContext _context;
@@ -135,10 +136,17 @@ public class UrlCachingTests : IAsyncLifetime
 
         // Populate cache
         await _urlService.GetUrlByShortCodeAsync(created.ShortCode);
+
+        // Wait for cache write to complete
+        await Task.Delay(100);
+
         var cachedBefore = await _cacheService.GetAsync<Url>($"url:shortcode:{created.ShortCode}");
 
         // Act - Delete should invalidate cache
         await _urlService.DeleteUrlAsync(created.Id);
+
+        // Wait for cache invalidation to complete
+        await Task.Delay(100);
 
         var cachedAfter = await _cacheService.GetAsync<Url>($"url:shortcode:{created.ShortCode}");
 
@@ -211,15 +219,24 @@ public class UrlCachingTests : IAsyncLifetime
         // Act
         var created = await _urlService.CreateUrlAsync(url);
 
-        // Get TTL from Redis
+        // Wait for async cache operation to complete
+        await Task.Delay(200);
+
+        // Verify the URL was cached by trying to retrieve it
+        var cacheKey = $"url:shortcode:{created.ShortCode}";
+        var cached = await _cacheService.GetAsync<Url>(cacheKey);
+
+        Assert.NotNull(cached);
+
+        // Now check TTL from Redis
         var redis = StackExchange.Redis.ConnectionMultiplexer.Connect("localhost:6379");
         var db = redis.GetDatabase();
-        var ttl = await db.KeyTimeToLiveAsync($"url:shortcode:{created.ShortCode}");
+        var ttl = await db.KeyTimeToLiveAsync(cacheKey);
 
         // Assert - TTL should be around 10 minutes, not 1 hour
         Assert.NotNull(ttl);
-        Assert.True(ttl.Value.TotalMinutes <= 10);
-        Assert.True(ttl.Value.TotalMinutes > 9); // Some tolerance for execution time
+        Assert.True(ttl.Value.TotalMinutes <= 10, $"TTL was {ttl.Value.TotalMinutes} minutes, expected <= 10");
+        Assert.True(ttl.Value.TotalMinutes > 9, $"TTL was {ttl.Value.TotalMinutes} minutes, expected > 9");
     }
 
     [Fact]

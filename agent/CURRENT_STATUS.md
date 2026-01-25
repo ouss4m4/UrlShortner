@@ -34,6 +34,7 @@
 - ✅ **URL expiration/TTL** (time-to-live for short URLs)
 - ✅ **URL categories** (organize URLs by topic with case-insensitive search)
 - ✅ **URL tags** (comma-separated tags with case-insensitive search)
+- ✅ **Bulk URL creation** (import multiple URLs with partial success handling)
 
 ### 4. Visit Tracking & Analytics
 
@@ -90,13 +91,14 @@ DELETE /api/user/{id}         - Delete user
 
 ### 8. Test Coverage
 
-**84 tests passing** (~1.9s execution):
+**95 tests passing** (~1s execution):
 
 - CacheServiceTests: 6 tests (Redis Get/Set/Remove/Exists)
 - UrlCachingTests: 8 tests (cache hit/miss, invalidation, warmup, smart TTL)
 - UrlExpirationTests: 5 tests (expired URLs, null expiry, user filtering)
 - ShortCodeValidationTests: 20 tests (length, characters, reserved words)
 - UrlCategoryTagTests: 14 tests (categories, tags, filtering, expiration)
+- BulkUrlCreationTests: 11 tests (bulk creation, partial success, validation)
 - ShortCodeGeneratorTests: 6 tests
 - UrlCrudTests: 8 tests
 - UrlControllerTests: 3 tests
@@ -114,7 +116,32 @@ DELETE /api/user/{id}         - Delete user
 
 ## 📝 Recent Completion (January 25, 2026)
 
-**Phase 1.3: URL Categories & Tags** ✅
+**Phase 1.4: Bulk URL Creation** ✅
+
+Following strict TDD (RED-GREEN-REFACTOR):
+
+**Features:**
+
+- ✅ BulkCreateUrlsAsync accepts list of URLs for batch import
+- ✅ Returns BulkCreateResult with success/failure breakdown
+- ✅ Auto-generates short codes for URLs without custom codes
+- ✅ Validates each URL individually (length, characters, reserved words)
+- ✅ Handles duplicate short codes gracefully (partial success)
+- ✅ Preserves metadata (category, tags, expiry) for each URL
+- ✅ Caches all successfully created URLs
+- ✅ Returns detailed error messages for failures
+
+**Implementation:**
+
+- ✅ Wrote 11 comprehensive tests (RED phase)
+- ✅ Created BulkCreateResult and BulkCreateFailure models
+- ✅ Added BulkCreateUrlsAsync to IUrlService interface
+- ✅ Implemented method with try-catch per URL for error isolation
+- ✅ All 95 tests passing (84 existing + 11 new)
+
+---
+
+**Previous: Phase 1.3: URL Categories & Tags** ✅
 
 Following strict TDD (RED-GREEN-REFACTOR):
 
@@ -204,7 +231,7 @@ Following strict TDD (RED-GREEN-REFACTOR):
 - ✅ **URL expiration** - Time-to-live for short URLs
 - ✅ **Custom short codes** - User-specified vanity URLs (enhanced validation)
 - ✅ **URL categories/tags** - Organize URLs by topic
-- [ ] **Bulk URL creation** - Import multiple URLs at once
+- ✅ **Bulk URL creation** - Import multiple URLs at once
 
 ### Phase 2: Rate Limiting & Security
 

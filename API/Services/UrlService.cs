@@ -148,6 +148,48 @@ namespace UrlShortner.API.Services
             }
         }
 
+        public async Task<BulkCreateResult> BulkCreateUrlsAsync(IEnumerable<Url> urls)
+        {
+            var createdUrls = new List<Url>();
+            var failures = new List<BulkCreateFailure>();
+
+            foreach (var url in urls)
+            {
+                try
+                {
+                    var created = await CreateUrlAsync(url);
+                    createdUrls.Add(created);
+                }
+                catch (ArgumentException ex)
+                {
+                    // Validation error (short code too short/long, invalid characters, reserved word)
+                    failures.Add(new BulkCreateFailure
+                    {
+                        OriginalUrl = url.OriginalUrl,
+                        ShortCode = url.ShortCode ?? string.Empty,
+                        Error = ex.Message
+                    });
+                }
+                catch (InvalidOperationException ex)
+                {
+                    // Duplicate short code error
+                    failures.Add(new BulkCreateFailure
+                    {
+                        OriginalUrl = url.OriginalUrl,
+                        ShortCode = url.ShortCode ?? string.Empty,
+                        Error = ex.Message
+                    });
+                }
+            }
+
+            return new BulkCreateResult
+            {
+                SuccessCount = createdUrls.Count,
+                CreatedUrls = createdUrls,
+                Failures = failures
+            };
+        }
+
         public async Task<Url?> GetUrlByIdAsync(int id)
         {
             return await _context.Urls.FindAsync(id);

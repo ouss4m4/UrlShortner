@@ -4,6 +4,7 @@ using Xunit;
 
 namespace Test;
 
+[Collection("Redis Tests")]
 public class CacheServiceTests : IAsyncLifetime
 {
     private readonly ICacheService _cacheService;

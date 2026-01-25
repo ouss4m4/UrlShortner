@@ -7,6 +7,7 @@ namespace UrlShortner.API.Services
     public interface IUrlService
     {
         Task<Url> CreateUrlAsync(Url url);
+        Task<BulkCreateResult> BulkCreateUrlsAsync(IEnumerable<Url> urls);
         Task<Url?> GetUrlByIdAsync(int id);
         Task<Url?> GetUrlByShortCodeAsync(string shortCode);
         Task<IEnumerable<Url>> GetUrlsByUserIdAsync(int userId);
