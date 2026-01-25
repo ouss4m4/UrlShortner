@@ -107,6 +107,40 @@ DELETE /api/user/{id}         - Delete user
 - No mocks - tests exercise actual service/repository patterns
 - Fast, isolated, and reliable
 
+## 📝 Recent Completion (January 25, 2026)
+
+**Phase 1.1: URL Expiration + Smart Cache TTL & Warmup** ✅
+
+Following strict TDD (RED-GREEN-REFACTOR):
+
+**Part 1: URL Expiration**
+- ✅ Wrote 5 expiration tests (RED phase)
+- ✅ Implemented expiration checking in GetUrlByShortCodeAsync
+- ✅ Added expiry filtering in GetUrlsByUserIdAsync
+- ✅ Expired URLs return null (treated as not found)
+- ✅ URLs with null Expiry never expire (permanent)
+
+**Part 2: Smart Cache TTL & Warmup**
+- ✅ Wrote 4 cache enhancement tests (RED phase)
+- ✅ Implemented CalculateCacheTTL() method
+- ✅ Smart TTL: uses shorter of 1 hour OR time until expiry
+- ✅ Cache warmup in CreateUrlAsync (proactive caching)
+- ✅ Cache warmup in UpdateUrlAsync (invalidate + warm up)
+- ✅ All 50 tests passing
+
+**Files Created:**
+- Test/UrlExpirationTests.cs (5 tests)
+
+**Files Modified:**
+- API/Services/UrlService.cs (expiration + smart TTL + warmup)
+- Test/UrlCachingTests.cs (4 new tests, 1 updated test)
+
+**Commits:**
+- feat: URL expiration with smart cache TTL and warmup
+- docs: update process.md and CURRENT_STATUS.md for cache enhancements
+
+---
+
 ## 🎯 Roadmap - Next Features
 
 ### Phase 1: Advanced URL Features
@@ -143,13 +177,14 @@ DELETE /api/user/{id}         - Delete user
 
 ---
 
-## 🚀 Completed Recently
+## 🚀 Completed Recently (January 25, 2026)
 
 - ✅ Visit tracking refactor (fire-and-forget event capture)
 - ✅ Analytics refactor (computed views from Visit events)
 - ✅ GeoIP integration (IP-API service)
 - ✅ Background analytics aggregation (IHostedService)
 - ✅ Swagger/OpenAPI documentation
+- ✅ URL expiration with smart cache TTL and warmup
 
 ---
 
