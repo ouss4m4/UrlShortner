@@ -6,6 +6,9 @@ using UrlShortner.API.Services;
 using API.Services;
 using StackExchange.Redis;
 using UrlShortner.API.Middleware;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.IdentityModel.Tokens;
+using System.Text;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -32,12 +35,41 @@ builder.Services.AddCors(options =>
     });
 });
 
+// JWT Authentication Configuration
+var jwtSecret = builder.Configuration["Jwt:Secret"]
+    ?? throw new InvalidOperationException("JWT Secret is not configured. Set Jwt:Secret in appsettings.json or environment variables.");
+var jwtIssuer = builder.Configuration["Jwt:Issuer"];
+var jwtAudience = builder.Configuration["Jwt:Audience"];
+
+builder.Services.AddAuthentication(options =>
+{
+    options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
+    options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
+})
+.AddJwtBearer(options =>
+{
+    options.TokenValidationParameters = new TokenValidationParameters
+    {
+        ValidateIssuerSigningKey = true,
+        IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtSecret)),
+        ValidateIssuer = true,
+        ValidIssuer = jwtIssuer,
+        ValidateAudience = true,
+        ValidAudience = jwtAudience,
+        ValidateLifetime = true,
+        ClockSkew = TimeSpan.Zero
+    };
+});
+
+builder.Services.AddAuthorization();
+
 // OpenAPI/Swagger Configuration
 builder.Services.AddOpenApi();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 builder.Services.AddSingleton<IShortCodeGenerator, ShortCodeGenerator>();
 builder.Services.AddSingleton<IUrlValidator, UrlValidator>();
+builder.Services.AddSingleton<ITokenService, TokenService>();
 builder.Services.AddScoped<IUserService, UserService>();
 builder.Services.AddScoped<IUrlService, UrlService>();
 builder.Services.AddScoped<IVisitService, VisitService>();
@@ -108,6 +140,10 @@ if (app.Environment.IsProduction())
 
 // CORS (before routing and rate limiting)
 app.UseCors();
+
+// Authentication & Authorization (before routing)
+app.UseAuthentication();
+app.UseAuthorization();
 
 // Rate limiting middleware (before routing)
 if (!app.Environment.IsEnvironment("Test"))
