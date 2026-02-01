@@ -1,7 +1,9 @@
 # Ignore build output
 bin/
 obj/
-
+publish
+bin
+debug
 # Ignore Rider IDE files
 .idea/
 *.sln.iml

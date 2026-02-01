@@ -1,0 +1,10 @@
+# Debug Dockerfile - just copy files and keep container running
+FROM mcr.microsoft.com/dotnet/sdk:10.0
+
+WORKDIR /src/API
+
+# Copy everything
+COPY API/ ./
+
+# Keep container alive
+CMD ["tail", "-f", "/dev/null"]

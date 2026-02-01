@@ -1,0 +1,33 @@
+# Build artifacts (NEVER copy these)
+bin/
+obj/
+**/bin/
+**/obj/
+
+# IDE files
+**/.dockerignore
+**/.git
+**/.gitignore
+**/.vs
+**/.vscode
+**/.idea
+*.sln
+*.DotSettings*
+*.user
+
+# Development files
+**/node_modules
+**/.DS_Store
+**/appsettings.Development.json
+**/Properties/launchSettings.json
+
+# Test project (not needed in API image)
+Test/
+
+# Documentation and config files
+agent/
+*.md
+docker-compose.yml
+Dockerfile
+Dockerfile.debug
+*.http

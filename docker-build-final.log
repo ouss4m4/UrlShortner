@@ -1,0 +1,67 @@
+#0 building with "desktop-linux" instance using docker driver
+
+#1 [internal] load build definition from Dockerfile
+#1 transferring dockerfile: 738B done
+#1 DONE 0.0s
+
+#2 [internal] load metadata for mcr.microsoft.com/dotnet/sdk:10.0
+#2 DONE 0.0s
+
+#3 [internal] load metadata for mcr.microsoft.com/dotnet/aspnet:10.0
+#3 DONE 0.4s
+
+#4 [internal] load .dockerignore
+#4 transferring context: 331B done
+#4 DONE 0.0s
+
+#5 [runtime 1/3] FROM mcr.microsoft.com/dotnet/aspnet:10.0@sha256:1aacc8154bc3071349907dae26849df301188be1a2e1f4560b903fb6275e481a
+#5 resolve mcr.microsoft.com/dotnet/aspnet:10.0@sha256:1aacc8154bc3071349907dae26849df301188be1a2e1f4560b903fb6275e481a 0.0s done
+#5 DONE 0.0s
+
+#6 [runtime 2/3] WORKDIR /app
+#6 CACHED
+
+#7 [build 1/6] FROM mcr.microsoft.com/dotnet/sdk:10.0@sha256:25d14b400b75fa4e89d5bd4487a92a604a4e409ab65becb91821e7dc4ac7f81f
+#7 resolve mcr.microsoft.com/dotnet/sdk:10.0@sha256:25d14b400b75fa4e89d5bd4487a92a604a4e409ab65becb91821e7dc4ac7f81f 0.0s done
+#7 CACHED
+
+#8 [build 2/6] WORKDIR /src/API
+#8 DONE 0.0s
+
+#9 [internal] load build context
+#9 transferring context: 14.72kB 0.0s done
+#9 DONE 0.0s
+
+#10 [build 3/6] COPY API/UrlShortner.csproj ./
+#10 DONE 0.0s
+
+#11 [build 4/6] RUN dotnet restore UrlShortner.csproj
+#11 0.468   Determining projects to restore...
+#11 8.372   Restored /src/API/UrlShortner.csproj (in 7.73 sec).
+#11 DONE 8.5s
+
+#12 [build 5/6] COPY API/ ./
+#12 DONE 0.0s
+
+#13 [build 6/6] RUN dotnet publish UrlShortner.csproj -c Release -o /app/publish /p:UseAppHost=false
+#13 0.346   Determining projects to restore...
+#13 7.584   Restored /src/API/UrlShortner.csproj (in 7.07 sec).
+#13 7.812 /usr/share/dotnet/sdk/10.0.102/Microsoft.Common.CurrentVersion.targets(3442,5): error MSB3552: Resource file "**/*.resx" cannot be found. [/src/API/UrlShortner.csproj]
+#13 ERROR: process "/bin/sh -c dotnet publish UrlShortner.csproj -c Release -o /app/publish /p:UseAppHost=false" did not complete successfully: exit code: 1
+------
+ > [build 6/6] RUN dotnet publish UrlShortner.csproj -c Release -o /app/publish /p:UseAppHost=false:
+0.346   Determining projects to restore...
+7.584   Restored /src/API/UrlShortner.csproj (in 7.07 sec).
+7.812 /usr/share/dotnet/sdk/10.0.102/Microsoft.Common.CurrentVersion.targets(3442,5): error MSB3552: Resource file "**/*.resx" cannot be found. [/src/API/UrlShortner.csproj]
+------
+Dockerfile:15
+--------------------
+  13 |     
+  14 |     # Publish directly (this is what works locally)
+  15 | >>> RUN dotnet publish UrlShortner.csproj -c Release -o /app/publish /p:UseAppHost=false
+  16 |     
+  17 |     # Runtime stage
+--------------------
+ERROR: failed to solve: process "/bin/sh -c dotnet publish UrlShortner.csproj -c Release -o /app/publish /p:UseAppHost=false" did not complete successfully: exit code: 1
+
+View build details: docker-desktop://dashboard/build/desktop-linux/desktop-linux/r236jsa8bj999enmi5lox6f9s

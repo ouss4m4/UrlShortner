@@ -133,11 +133,12 @@ if (app.Environment.IsDevelopment())
     });
 }
 
-// HTTPS redirection (only in Production)
-if (app.Environment.IsProduction())
-{
-    app.UseHttpsRedirection();
-}
+// HTTPS redirection (only in Production with HTTPS configured)
+// Disabled for containerized deployments - use a reverse proxy (nginx/traefik) for TLS termination
+// if (app.Environment.IsProduction())
+// {
+//     app.UseHttpsRedirection();
+// }
 
 // CORS (before routing and rate limiting)
 app.UseCors();
