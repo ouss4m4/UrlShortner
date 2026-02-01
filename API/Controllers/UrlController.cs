@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System.Security.Claims;
 using System.Threading.Tasks;
@@ -69,25 +70,56 @@ namespace UrlShortner.API.Controllers
         // Note: Redirect moved to root-level endpoint in Program.cs: /{shortCode}
         // This keeps URLs short (the whole point!) instead of /api/url/redirect/{shortCode}
 
+        [Authorize]
         [HttpGet("user/{userId}")]
         public async Task<IActionResult> GetByUserId(int userId)
         {
+            // Only allow users to access their own URLs
+            var currentUserIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            if (currentUserIdClaim == null || int.Parse(currentUserIdClaim) != userId)
+            {
+                return Forbid();
+            }
+
             var urls = await _urlService.GetUrlsByUserIdAsync(userId);
             return Ok(urls);
         }
 
+        [Authorize]
         [HttpPut("{id}")]
         public async Task<IActionResult> Update(int id, [FromBody] Url url)
         {
             if (id != url.Id) return BadRequest();
+
+            // Verify ownership before updating
+            var existingUrl = await _urlService.GetUrlByIdAsync(id);
+            if (existingUrl == null) return NotFound();
+
+            var currentUserIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            if (currentUserIdClaim == null || existingUrl.UserId != int.Parse(currentUserIdClaim))
+            {
+                return Forbid();
+            }
+
             var updated = await _urlService.UpdateUrlAsync(url);
             if (updated == null) return NotFound();
             return Ok(updated);
         }
 
+        [Authorize]
         [HttpDelete("{id}")]
         public async Task<IActionResult> Delete(int id)
         {
+            // Verify ownership before deleting
+            var existingUrl = await _urlService.GetUrlByIdAsync(id);
+            if (existingUrl == null) return NotFound();
+
+            var currentUserIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            if (currentUserIdClaim == null || existingUrl.UserId != int.Parse(currentUserIdClaim))
+            {
+                return Forbid();
+            }
+
             var deleted = await _urlService.DeleteUrlAsync(id);
             if (!deleted) return NotFound();
             return NoContent();

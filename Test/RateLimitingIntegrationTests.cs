@@ -128,6 +128,20 @@ public class RateLimitingIntegrationTests : IClassFixture<WebApplicationFactory<
         var client = _factory.CreateClient();
         var db = _redis.GetDatabase();
 
+        // Register and login to get auth token
+        var registerRequest = new { username = $"ratelimit_{Guid.NewGuid()}", email = $"ratelimit_{Guid.NewGuid()}@test.com", password = "Test123!@#" };
+        var registerResponse = await client.PostAsJsonAsync("/api/auth/register", registerRequest);
+        var authData = await registerResponse.Content.ReadFromJsonAsync<System.Text.Json.JsonElement>();
+        string token = authData.GetProperty("accessToken").GetString()!;
+        int userId = authData.GetProperty("userId").GetInt32();
+
+        // Create a URL for this user
+        client.DefaultRequestHeaders.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token);
+        var urlRequest = new { originalUrl = "https://example.com", userId = userId };
+        var urlResponse = await client.PostAsJsonAsync("/api/url", urlRequest);
+        var urlData = await urlResponse.Content.ReadFromJsonAsync<System.Text.Json.JsonElement>();
+        int urlId = urlData.GetProperty("id").GetInt32();
+
         // Clean up any existing rate limit keys
         var server = _redis.GetServer(_redis.GetEndPoints().First());
         var keys = server.Keys(pattern: "ratelimit:*");
@@ -140,7 +154,7 @@ public class RateLimitingIntegrationTests : IClassFixture<WebApplicationFactory<
         HttpResponseMessage? lastResponse = null;
         for (int i = 0; i < 101; i++)
         {
-            lastResponse = await client.GetAsync("/api/analytics/url/999999");
+            lastResponse = await client.GetAsync($"/api/analytics/url/{urlId}");
         }
 
         // Assert
