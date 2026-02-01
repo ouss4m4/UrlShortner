@@ -87,7 +87,7 @@ public class AuthenticationTests
         // Assert
         Assert.NotNull(refreshToken);
         Assert.NotEmpty(refreshToken);
-        
+
         // Should be valid base64
         var bytes = Convert.FromBase64String(refreshToken);
         Assert.Equal(64, bytes.Length);

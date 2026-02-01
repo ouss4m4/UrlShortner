@@ -70,6 +70,7 @@ builder.Services.AddSwaggerGen();
 builder.Services.AddSingleton<IShortCodeGenerator, ShortCodeGenerator>();
 builder.Services.AddSingleton<IUrlValidator, UrlValidator>();
 builder.Services.AddSingleton<ITokenService, TokenService>();
+builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddScoped<IUserService, UserService>();
 builder.Services.AddScoped<IUrlService, UrlService>();
 builder.Services.AddScoped<IVisitService, VisitService>();
