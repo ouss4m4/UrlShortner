@@ -12,6 +12,26 @@ var builder = WebApplication.CreateBuilder(args);
 // Add services to the container.
 builder.Services.AddControllers();
 
+// Configure HTTPS redirection
+builder.Services.AddHttpsRedirection(options =>
+{
+    options.RedirectStatusCode = (int)System.Net.HttpStatusCode.PermanentRedirect;
+    options.HttpsPort = 443;
+});
+
+// CORS Configuration
+builder.Services.AddCors(options =>
+{
+    options.AddDefaultPolicy(policy =>
+    {
+        policy.WithOrigins("https://example.com", "https://app.example.com")
+              .AllowAnyMethod()
+              .AllowAnyHeader()
+              .AllowCredentials()
+              .WithExposedHeaders("X-RateLimit-Limit", "X-RateLimit-Remaining", "Retry-After");
+    });
+});
+
 // OpenAPI/Swagger Configuration
 builder.Services.AddOpenApi();
 builder.Services.AddEndpointsApiExplorer();
@@ -80,7 +100,14 @@ if (app.Environment.IsDevelopment())
     });
 }
 
-app.UseHttpsRedirection();
+// HTTPS redirection (only in Production)
+if (app.Environment.IsProduction())
+{
+    app.UseHttpsRedirection();
+}
+
+// CORS (before routing and rate limiting)
+app.UseCors();
 
 // Rate limiting middleware (before routing)
 if (!app.Environment.IsEnvironment("Test"))
