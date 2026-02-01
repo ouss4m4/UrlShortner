@@ -1,7 +1,7 @@
 # Current Status - URL Shortener Project
 
 **Last Updated:** January 25, 2026  
-**Current Phase:** Phase 2 - Rate Limiting & Security (In Progress)
+**Current Phase:** Phase 2 - Rate Limiting & Security (COMPLETE ✅)
 
 ## ✅ Completed Features
 
@@ -81,13 +81,28 @@
 - ✅ **Reserved word protection** - Blocks admin, api, swagger, etc.
 - ✅ **Alphanumeric enforcement** - Only a-z, A-Z, 0-9 allowed in short codes
 
-### 7. API Documentation
+### 8. HTTPS Enforcement (Phase 2.3) ✅
+
+- ✅ **Production-only HTTPS redirection** - 308 Permanent Redirect
+- ✅ **HTTPS port configuration** - Port 443 with proper status codes
+- ✅ **Development bypass** - HTTP allowed in Development environment
+- ✅ **Environment-aware middleware** - No redirection in Test environment
+
+### 9. CORS Policy (Phase 2.4) ✅
+
+- ✅ **Origin allowlist** - Specific origins (example.com, app.example.com)
+- ✅ **Credentials support** - AllowCredentials enabled
+- ✅ **Method flexibility** - AllowAnyMethod for all HTTP verbs
+- ✅ **Header exposure** - X-RateLimit-\*, Retry-After headers exposed
+- ✅ **Preflight handling** - OPTIONS requests properly handled
+
+### 10. API Documentation
 
 - ✅ **Swagger/OpenAPI** integration (Swashbuckle.AspNetCore)
 - ✅ **Interactive API UI** at /swagger
 - ✅ **OpenAPI spec** at /swagger/v1/swagger.json
 
-### 8. API Endpoints
+### 11. API Endpoints
 
 ```
 # Core Endpoints
@@ -144,7 +159,53 @@ DELETE /api/user/{id}         - Delete user
 
 ## 📝 Recent Completion (January 25, 2026)
 
-**Phase 1.4: Bulk URL Creation** ✅
+**Phase 2: Rate Limiting & Security** ✅ (165 tests)
+
+Following strict TDD (RED-GREEN-REFACTOR):
+
+**Phase 2.1: Redis-backed Rate Limiting** ✅
+
+- ✅ Fixed window algorithm with atomic Redis operations (INCR + EXPIRE)
+- ✅ Distributed rate limiting across multiple API instances
+- ✅ Per-endpoint limits: POST /api/url (10/min), POST /api/url/bulk (5/min), GET /api/analytics (100/min)
+- ✅ Per-IP tracking with X-Forwarded-For support
+- ✅ Rate limit response headers (X-RateLimit-Limit, X-RateLimit-Remaining, Retry-After)
+- ✅ 429 Too Many Requests with retry information
+- ✅ 15 tests (10 unit tests + 5 integration tests)
+
+**Phase 2.2: Input Validation** ✅
+
+- ✅ ValidationResult pattern for clean error messaging
+- ✅ URL validation: HTTP/HTTPS only, max 2048 chars, no control characters
+- ✅ Security: Blocks localhost, private IPs (10.x, 172.16.x, 192.168.x, ::1)
+- ✅ Short code validation: 3-20 chars, alphanumeric, reserved words (admin, api, swagger, etc.)
+- ✅ Integrated into UrlService with centralized validation
+- ✅ 48 comprehensive validation tests
+
+**Phase 2.3: HTTPS Enforcement** ✅
+
+- ✅ Production-only HTTPS redirection (308 Permanent Redirect)
+- ✅ Configured HTTPS port 443 with proper status codes
+- ✅ Development environment bypass for local testing
+- ✅ 3 integration tests with environment configuration
+
+**Phase 2.4: CORS Policy** ✅
+
+- ✅ Origin allowlist (example.com, app.example.com)
+- ✅ AllowCredentials for cookie/auth header support
+- ✅ Expose X-RateLimit-\* headers for client-side awareness
+- ✅ Preflight OPTIONS request handling
+- ✅ 4 integration tests for CORS headers
+
+**Test Results:**
+
+- 165 tests total (all passing)
+- 7 new tests added (3 HTTPS + 4 CORS)
+- Complete Phase 2 security suite
+
+---
+
+**Previous: Phase 1.4: Bulk URL Creation** ✅
 
 Following strict TDD (RED-GREEN-REFACTOR):
 

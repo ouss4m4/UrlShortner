@@ -34,11 +34,11 @@ This project follows a strict test-driven development (TDD) workflow.
 - Use dependency injection for all services
 - Keep business logic in service layer, not controllers
 
-**All 41 tests passing!**
+**All 165 tests passing!**
 
 ## Current Status
 
-- **Where we are**: Phase 2.1 complete - Redis-backed distributed rate limiting! **110 tests passing**.
+- **Where we are**: Phase 2 complete - Rate limiting & security features! **165 tests passing**.
 - **Features Complete**:
   - ✅ Base62 short code generation
   - ✅ Auto-generated + custom short codes
@@ -48,6 +48,14 @@ This project follows a strict test-driven development (TDD) workflow.
   - ✅ Real-time computed analytics
   - ✅ Background hourly aggregation (IHostedService)
   - ✅ Redis caching with invalidation
+  - ✅ URL expiration/TTL with smart cache TTL
+  - ✅ Custom short code validation (alphanumeric, reserved words)
+  - ✅ URL categories and tags (search & filter)
+  - ✅ Bulk URL creation (batch import with partial success)
+  - ✅ Redis-backed distributed rate limiting (fixed window)
+  - ✅ Comprehensive input validation (URL format, localhost blocking)
+  - ✅ HTTPS enforcement (Production-only, 308 redirect)
+  - ✅ CORS policy (origin allowlist, credentials, exposed headers)
   - ✅ Swagger/OpenAPI documentation
   - ✅ **URL expiration/TTL (time-to-live)**
   - ✅ **Smart cache TTL (respects URL expiry)**
