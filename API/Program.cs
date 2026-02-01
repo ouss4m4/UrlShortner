@@ -120,6 +120,14 @@ if (!isTest)
 
 var app = builder.Build();
 
+// Apply migrations automatically on startup in Production
+if (app.Environment.IsProduction() && !app.Environment.IsEnvironment("Test"))
+{
+    using var scope = app.Services.CreateScope();
+    var dbContext = scope.ServiceProvider.GetRequiredService<UrlShortner.API.Data.UrlShortnerDbContext>();
+    dbContext.Database.Migrate();
+}
+
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
 {
