@@ -151,6 +151,9 @@ if (app.Environment.IsDevelopment())
 // CORS (before routing and rate limiting)
 app.UseCors();
 
+// Serve static files from wwwroot (frontend)
+app.UseStaticFiles();
+
 // Authentication & Authorization (before routing)
 app.UseAuthentication();
 app.UseAuthorization();
@@ -212,6 +215,9 @@ app.MapGet("/{shortCode}", async (string shortCode, IUrlService urlService, Http
 })
 .WithName("RedirectToOriginalUrl")
 .WithTags("Redirect");
+// SPA fallback - serve index.html for any non-API routes
+app.MapFallbackToFile("index.html");
+
 
 app.MapControllers();
 

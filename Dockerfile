@@ -1,4 +1,20 @@
-# Build stage
+# Frontend build stage
+FROM node:20-alpine AS client-build
+WORKDIR /app/Client
+
+# Copy package files
+COPY Client/package*.json ./
+
+# Install dependencies
+RUN npm ci
+
+# Copy source files
+COPY Client/ ./
+
+# Build React app
+RUN npm run build
+
+# Backend build stage
 FROM mcr.microsoft.com/dotnet/sdk:10.0 AS build
 WORKDIR /src/API
 
@@ -10,6 +26,9 @@ RUN dotnet restore UrlShortner.csproj
 
 # Copy all source files
 COPY API/ ./
+
+# Copy frontend build to wwwroot
+COPY --from=client-build /app/Client/dist ./wwwroot
 
 # Publish directly (this is what works locally)
 RUN dotnet publish UrlShortner.csproj -c Release -o /app/publish

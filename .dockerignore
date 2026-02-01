@@ -21,6 +21,10 @@ obj/
 **/appsettings.Development.json
 **/Properties/launchSettings.json
 
+# Client build artifacts (built in Docker)
+Client/dist/
+Client/node_modules/
+
 # Test project (not needed in API image)
 Test/
 
