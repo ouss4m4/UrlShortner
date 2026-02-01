@@ -165,8 +165,8 @@ if (!app.Environment.IsEnvironment("Test"))
 }
 
 // Root-level redirect endpoint: /{shortCode} -> Original URL
-// This is the main purpose of a URL shortener - keep it SHORT!
-app.MapGet("/{shortCode}", async (string shortCode, IUrlService urlService, HttpContext httpContext, IServiceScopeFactory scopeFactory) =>
+// Route constraint: only match 4-12 alphanumeric chars (excludes frontend routes like 'dashboard', 'assets', etc.)
+app.MapGet("/{shortCode:regex(^[[a-zA-Z0-9]]{{4,12}}$)}", async (string shortCode, IUrlService urlService, HttpContext httpContext, IServiceScopeFactory scopeFactory) =>
 {
     var url = await urlService.GetUrlByShortCodeAsync(shortCode);
     if (url == null)
@@ -215,11 +215,14 @@ app.MapGet("/{shortCode}", async (string shortCode, IUrlService urlService, Http
 })
 .WithName("RedirectToOriginalUrl")
 .WithTags("Redirect");
-// SPA fallback - serve index.html for any non-API routes
-app.MapFallbackToFile("index.html");
-
 
 app.MapControllers();
+
+// SPA fallback - serve index.html for any routes that don't match:
+// - Static files (assets/*)
+// - API routes (/api/*)
+// - Short code redirects (/{shortCode} with regex constraint)
+app.MapFallbackToFile("index.html");
 
 app.Run();
 
