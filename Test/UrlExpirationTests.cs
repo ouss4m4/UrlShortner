@@ -22,7 +22,7 @@ public class UrlExpirationTests
         // Arrange
         var context = CreateInMemoryContext();
         var shortCodeGenerator = new ShortCodeGenerator();
-        var urlService = new UrlService(context, shortCodeGenerator, null);
+        var urlService = new UrlService(context, shortCodeGenerator, new UrlValidator(), null);
 
         var expiredUrl = new Url
         {
@@ -52,7 +52,7 @@ public class UrlExpirationTests
         // Arrange
         var context = CreateInMemoryContext();
         var shortCodeGenerator = new ShortCodeGenerator();
-        var urlService = new UrlService(context, shortCodeGenerator, null);
+        var urlService = new UrlService(context, shortCodeGenerator, new UrlValidator(), null);
 
         var activeUrl = new Url
         {
@@ -83,7 +83,7 @@ public class UrlExpirationTests
         // Arrange
         var context = CreateInMemoryContext();
         var shortCodeGenerator = new ShortCodeGenerator();
-        var urlService = new UrlService(context, shortCodeGenerator, null);
+        var urlService = new UrlService(context, shortCodeGenerator, new UrlValidator(), null);
 
         var permanentUrl = new Url
         {
@@ -114,7 +114,7 @@ public class UrlExpirationTests
         // Arrange
         var context = CreateInMemoryContext();
         var shortCodeGenerator = new ShortCodeGenerator();
-        var urlService = new UrlService(context, shortCodeGenerator, null);
+        var urlService = new UrlService(context, shortCodeGenerator, new UrlValidator(), null);
 
         var urls = new List<Url>
         {
@@ -161,7 +161,7 @@ public class UrlExpirationTests
         // Arrange
         var context = CreateInMemoryContext();
         var shortCodeGenerator = new ShortCodeGenerator();
-        var urlService = new UrlService(context, shortCodeGenerator, null);
+        var urlService = new UrlService(context, shortCodeGenerator, new UrlValidator(), null);
 
         var url = new Url
         {

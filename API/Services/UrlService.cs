@@ -13,22 +13,19 @@ namespace UrlShortner.API.Services
         private readonly UrlShortnerDbContext _context;
         private readonly IShortCodeGenerator _shortCodeGenerator;
         private readonly ICacheService? _cacheService;
+        private readonly IUrlValidator _urlValidator;
         private const string CacheKeyPrefix = "url:shortcode:";
         private static readonly TimeSpan CacheExpiration = TimeSpan.FromHours(1);
-        private static readonly HashSet<string> ReservedShortCodes = new(StringComparer.OrdinalIgnoreCase)
-        {
-            "api", "swagger", "admin", "health", "analytics", "user", "url", "visit"
-        };
-        private const int MinShortCodeLength = 3;
-        private const int MaxShortCodeLength = 20;
 
         public UrlService(
             UrlShortnerDbContext context,
             IShortCodeGenerator shortCodeGenerator,
+            IUrlValidator urlValidator,
             ICacheService? cacheService = null)
         {
             _context = context;
             _shortCodeGenerator = shortCodeGenerator;
+            _urlValidator = urlValidator;
             _cacheService = cacheService;
         }
 
@@ -53,47 +50,25 @@ namespace UrlShortner.API.Services
             return timeUntilExpiry < CacheExpiration ? timeUntilExpiry : CacheExpiration;
         }
 
-        private void ValidateShortCode(string shortCode)
-        {
-            // Check if empty or whitespace
-            if (string.IsNullOrWhiteSpace(shortCode))
-            {
-                return; // Allow empty for auto-generation
-            }
-
-            // Check minimum length
-            if (shortCode.Length < MinShortCodeLength)
-            {
-                throw new ArgumentException($"Short code must be at least {MinShortCodeLength} characters long.", nameof(shortCode));
-            }
-
-            // Check maximum length
-            if (shortCode.Length > MaxShortCodeLength)
-            {
-                throw new ArgumentException($"Short code must be a maximum of {MaxShortCodeLength} characters long.", nameof(shortCode));
-            }
-
-            // Check for alphanumeric only (no special characters, spaces, etc.)
-            if (!shortCode.All(char.IsLetterOrDigit))
-            {
-                throw new ArgumentException("Short code must contain only alphanumeric characters (letters and numbers).", nameof(shortCode));
-            }
-
-            // Check for reserved words (case-insensitive)
-            if (ReservedShortCodes.Contains(shortCode))
-            {
-                throw new ArgumentException($"Short code '{shortCode}' is reserved and cannot be used.", nameof(shortCode));
-            }
-        }
-
         public async Task<Url> CreateUrlAsync(Url url)
         {
             try
             {
+                // Validate original URL
+                var urlValidation = _urlValidator.ValidateUrl(url.OriginalUrl);
+                if (!urlValidation.IsValid)
+                {
+                    throw new ArgumentException(urlValidation.ErrorMessage, nameof(url.OriginalUrl));
+                }
+
                 // Validate custom short code if provided
                 if (!string.IsNullOrEmpty(url.ShortCode))
                 {
-                    ValidateShortCode(url.ShortCode);
+                    var shortCodeValidation = _urlValidator.ValidateShortCode(url.ShortCode);
+                    if (!shortCodeValidation.IsValid)
+                    {
+                        throw new ArgumentException(shortCodeValidation.ErrorMessage, nameof(url.ShortCode));
+                    }
                 }
 
                 // Check for duplicate short code if one is provided

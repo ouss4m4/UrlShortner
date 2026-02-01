@@ -27,7 +27,7 @@ public class UrlControllerTests
     public async Task CreateReturns409ConflictWhenShortCodeExists()
     {
         using var context = GetInMemoryDbContext();
-        var service = new UrlService(context, GetShortCodeGenerator());
+        var service = new UrlService(context, GetShortCodeGenerator(), new UrlValidator());
         var controller = new UrlController(service);
 
         var url1 = new Url
@@ -59,7 +59,7 @@ public class UrlControllerTests
     public async Task CreateReturns201CreatedWhenShortCodeIsUnique()
     {
         using var context = GetInMemoryDbContext();
-        var service = new UrlService(context, GetShortCodeGenerator());
+        var service = new UrlService(context, GetShortCodeGenerator(), new UrlValidator());
         var controller = new UrlController(service);
 
         var url = new Url
@@ -83,7 +83,7 @@ public class UrlControllerTests
     public async Task CreateAutoGeneratesShortCodeWhenEmpty()
     {
         using var context = GetInMemoryDbContext();
-        var service = new UrlService(context, GetShortCodeGenerator());
+        var service = new UrlService(context, GetShortCodeGenerator(), new UrlValidator());
         var controller = new UrlController(service);
 
         var url = new Url

@@ -28,7 +28,8 @@ public class UrlCachingTests : IAsyncLifetime
         var redis = StackExchange.Redis.ConnectionMultiplexer.Connect("localhost:6379");
         _cacheService = new RedisCacheService(redis);
 
-        _urlService = new UrlService(_context, _shortCodeGenerator, _cacheService);
+        var urlValidator = new UrlValidator();
+        _urlService = new UrlService(_context, _shortCodeGenerator, urlValidator, _cacheService);
     }
 
     public async Task InitializeAsync()

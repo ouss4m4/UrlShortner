@@ -23,7 +23,7 @@ public class ShortCodeValidationTests
         // Arrange
         var context = CreateInMemoryContext();
         var shortCodeGenerator = new ShortCodeGenerator();
-        var urlService = new UrlService(context, shortCodeGenerator, null);
+        var urlService = new UrlService(context, shortCodeGenerator, new UrlValidator(), null);
 
         var url = new Url
         {
@@ -36,7 +36,7 @@ public class ShortCodeValidationTests
         var exception = await Assert.ThrowsAsync<ArgumentException>(
             async () => await urlService.CreateUrlAsync(url)
         );
-        Assert.Contains("at least 3 characters", exception.Message);
+        Assert.Contains("must be between 3 and 20 characters", exception.Message);
     }
 
     [Fact]
@@ -45,7 +45,7 @@ public class ShortCodeValidationTests
         // Arrange
         var context = CreateInMemoryContext();
         var shortCodeGenerator = new ShortCodeGenerator();
-        var urlService = new UrlService(context, shortCodeGenerator, null);
+        var urlService = new UrlService(context, shortCodeGenerator, new UrlValidator(), null);
 
         var url = new Url
         {
@@ -58,7 +58,7 @@ public class ShortCodeValidationTests
         var exception = await Assert.ThrowsAsync<ArgumentException>(
             async () => await urlService.CreateUrlAsync(url)
         );
-        Assert.Contains("maximum of 20 characters", exception.Message);
+        Assert.Contains("must be between 3 and 20 characters", exception.Message);
     }
 
     [Theory]
@@ -74,7 +74,7 @@ public class ShortCodeValidationTests
         // Arrange
         var context = CreateInMemoryContext();
         var shortCodeGenerator = new ShortCodeGenerator();
-        var urlService = new UrlService(context, shortCodeGenerator, null);
+        var urlService = new UrlService(context, shortCodeGenerator, new UrlValidator(), null);
 
         var url = new Url
         {
@@ -101,7 +101,7 @@ public class ShortCodeValidationTests
         // Arrange
         var context = CreateInMemoryContext();
         var shortCodeGenerator = new ShortCodeGenerator();
-        var urlService = new UrlService(context, shortCodeGenerator, null);
+        var urlService = new UrlService(context, shortCodeGenerator, new UrlValidator(), null);
 
         var url = new Url
         {
@@ -127,7 +127,7 @@ public class ShortCodeValidationTests
         // Arrange
         var context = CreateInMemoryContext();
         var shortCodeGenerator = new ShortCodeGenerator();
-        var urlService = new UrlService(context, shortCodeGenerator, null);
+        var urlService = new UrlService(context, shortCodeGenerator, new UrlValidator(), null);
 
         var url = new Url
         {
@@ -150,7 +150,7 @@ public class ShortCodeValidationTests
         // Arrange
         var context = CreateInMemoryContext();
         var shortCodeGenerator = new ShortCodeGenerator();
-        var urlService = new UrlService(context, shortCodeGenerator, null);
+        var urlService = new UrlService(context, shortCodeGenerator, new UrlValidator(), null);
 
         var url1 = new Url
         {

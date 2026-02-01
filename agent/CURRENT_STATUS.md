@@ -71,6 +71,16 @@
 - ✅ **429 responses** when limits exceeded
 - ✅ **Pattern matching** for parameterized routes
 
+### 7. Input Validation (Phase 2.2) ✅
+
+- ✅ **URL validation** - HTTP/HTTPS protocol enforcement
+- ✅ **URL length limits** - Maximum 2048 characters
+- ✅ **Malicious URL blocking** - Localhost and private IP addresses rejected
+- ✅ **Control character detection** - Prevents injection attacks
+- ✅ **Short code validation** - Centralized validation service
+- ✅ **Reserved word protection** - Blocks admin, api, swagger, etc.
+- ✅ **Alphanumeric enforcement** - Only a-z, A-Z, 0-9 allowed in short codes
+
 ### 7. API Documentation
 
 - ✅ **Swagger/OpenAPI** integration (Swashbuckle.AspNetCore)
@@ -105,7 +115,7 @@ DELETE /api/user/{id}         - Delete user
 
 ### 9. Test Coverage
 
-**110 tests passing** (~4s execution):
+**158 tests passing** (~4s execution):
 
 - CacheServiceTests: 6 tests (Redis Get/Set/Remove/Exists)
 - UrlCachingTests: 8 tests (cache hit/miss, invalidation, warmup, smart TTL)
@@ -115,6 +125,7 @@ DELETE /api/user/{id}         - Delete user
 - BulkUrlCreationTests: 11 tests (bulk import, validation, partial success)
 - RateLimiterTests: 10 tests (Redis rate limiter unit tests)
 - RateLimitingIntegrationTests: 5 tests (middleware integration, 429 responses)
+- UrlValidationTests: 48 tests (URL format, protocol, length, localhost/private IP, short code validation)
 - BulkUrlCreationTests: 11 tests (bulk creation, partial success, validation)
 - ShortCodeGeneratorTests: 6 tests
 - UrlCrudTests: 8 tests
@@ -252,9 +263,9 @@ Following strict TDD (RED-GREEN-REFACTOR):
 
 ### Phase 2: Rate Limiting & Security
 
-- [ ] **Rate limiting middleware** - Per-IP limits for URL creation
-- [ ] **Request throttling** - 429 Too Many Requests responses
-- [ ] **Input validation** - URL format, length, malicious content checks
+- ✅ **Rate limiting middleware** - Redis-backed distributed rate limiting
+- ✅ **Request throttling** - 429 Too Many Requests with Retry-After header
+- ✅ **Input validation** - URL format, protocol, length, localhost/private IP blocking
 - [ ] **HTTPS enforcement** - Redirect HTTP to HTTPS
 - [ ] **CORS policy** - Configure allowed origins
 

@@ -25,7 +25,7 @@ public class BulkUrlCreationTests
     public async Task BulkCreateUrlsAsync_CreatesMultipleUrls()
     {
         await using var context = GetInMemoryContext();
-        var service = new UrlService(context, GetShortCodeGenerator());
+        var service = new UrlService(context, GetShortCodeGenerator(), new UrlValidator());
 
         var urls = new List<Url>
         {
@@ -46,7 +46,7 @@ public class BulkUrlCreationTests
     public async Task BulkCreateUrlsAsync_AutoGeneratesShortCodes()
     {
         await using var context = GetInMemoryContext();
-        var service = new UrlService(context, GetShortCodeGenerator());
+        var service = new UrlService(context, GetShortCodeGenerator(), new UrlValidator());
 
         var urls = new List<Url>
         {
@@ -72,7 +72,7 @@ public class BulkUrlCreationTests
     public async Task BulkCreateUrlsAsync_AllowsCustomShortCodes()
     {
         await using var context = GetInMemoryContext();
-        var service = new UrlService(context, GetShortCodeGenerator());
+        var service = new UrlService(context, GetShortCodeGenerator(), new UrlValidator());
 
         var urls = new List<Url>
         {
@@ -91,7 +91,7 @@ public class BulkUrlCreationTests
     public async Task BulkCreateUrlsAsync_HandlesDuplicateShortCodes()
     {
         await using var context = GetInMemoryContext();
-        var service = new UrlService(context, GetShortCodeGenerator());
+        var service = new UrlService(context, GetShortCodeGenerator(), new UrlValidator());
 
         // Create first URL
         await service.CreateUrlAsync(new Url
@@ -122,7 +122,7 @@ public class BulkUrlCreationTests
     public async Task BulkCreateUrlsAsync_HandlesValidationErrors()
     {
         await using var context = GetInMemoryContext();
-        var service = new UrlService(context, GetShortCodeGenerator());
+        var service = new UrlService(context, GetShortCodeGenerator(), new UrlValidator());
 
         var urls = new List<Url>
         {
@@ -143,7 +143,7 @@ public class BulkUrlCreationTests
     public async Task BulkCreateUrlsAsync_MixedAutoAndCustomShortCodes()
     {
         await using var context = GetInMemoryContext();
-        var service = new UrlService(context, GetShortCodeGenerator());
+        var service = new UrlService(context, GetShortCodeGenerator(), new UrlValidator());
 
         var urls = new List<Url>
         {
@@ -164,7 +164,7 @@ public class BulkUrlCreationTests
     public async Task BulkCreateUrlsAsync_PreservesMetadata()
     {
         await using var context = GetInMemoryContext();
-        var service = new UrlService(context, GetShortCodeGenerator());
+        var service = new UrlService(context, GetShortCodeGenerator(), new UrlValidator());
 
         var expiry = DateTime.UtcNow.AddDays(7);
         var urls = new List<Url>
@@ -193,7 +193,7 @@ public class BulkUrlCreationTests
     public async Task BulkCreateUrlsAsync_ReturnsEmptyForEmptyList()
     {
         await using var context = GetInMemoryContext();
-        var service = new UrlService(context, GetShortCodeGenerator());
+        var service = new UrlService(context, GetShortCodeGenerator(), new UrlValidator());
 
         var result = await service.BulkCreateUrlsAsync(new List<Url>());
 
@@ -206,7 +206,7 @@ public class BulkUrlCreationTests
     public async Task BulkCreateUrlsAsync_HandlesLargeList()
     {
         await using var context = GetInMemoryContext();
-        var service = new UrlService(context, GetShortCodeGenerator());
+        var service = new UrlService(context, GetShortCodeGenerator(), new UrlValidator());
 
         var urls = Enumerable.Range(1, 100)
             .Select(i => new Url
@@ -232,7 +232,7 @@ public class BulkUrlCreationTests
     public async Task BulkCreateUrlsAsync_PartialSuccessScenario()
     {
         await using var context = GetInMemoryContext();
-        var service = new UrlService(context, GetShortCodeGenerator());
+        var service = new UrlService(context, GetShortCodeGenerator(), new UrlValidator());
 
         var urls = new List<Url>
         {
@@ -255,7 +255,7 @@ public class BulkUrlCreationTests
     public async Task BulkCreateUrlsAsync_AllFailuresScenario()
     {
         await using var context = GetInMemoryContext();
-        var service = new UrlService(context, GetShortCodeGenerator());
+        var service = new UrlService(context, GetShortCodeGenerator(), new UrlValidator());
 
         var urls = new List<Url>
         {

@@ -17,6 +17,7 @@ builder.Services.AddOpenApi();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 builder.Services.AddSingleton<IShortCodeGenerator, ShortCodeGenerator>();
+builder.Services.AddSingleton<IUrlValidator, UrlValidator>();
 builder.Services.AddScoped<IUserService, UserService>();
 builder.Services.AddScoped<IUrlService, UrlService>();
 builder.Services.AddScoped<IVisitService, VisitService>();
@@ -44,6 +45,9 @@ builder.Services.AddHangfireServer();
 // Register GeoIP service with HttpClient
 builder.Services.AddHttpClient<IGeoIpService, IpApiGeoIpService>(client =>
 {
+    // TODO: its bad to resolve ips at rediret time. it should be postop
+    // registe raw ip. try locate it later (background)
+    // 0 ms added
     client.Timeout = TimeSpan.FromSeconds(5); // Timeout for GeoIP lookups
 });
 
@@ -96,8 +100,8 @@ app.MapGet("/{shortCode}", async (string shortCode, IUrlService urlService, Http
 
     // Capture HttpContext values BEFORE starting background task (HttpContext will be disposed after response)
     var ipAddress = httpContext.Connection.RemoteIpAddress?.ToString() ?? "unknown";
-    var userAgent = httpContext.Request.Headers["User-Agent"].ToString() ?? "unknown";
-    var referrer = httpContext.Request.Headers["Referer"].ToString() ?? "";
+    var userAgent = httpContext.Request.Headers.UserAgent.ToString() ?? "unknown";
+    var referrer = httpContext.Request.Headers.Referer.ToString() ?? "";
     var urlId = url.Id;
 
     // Fire-and-forget visit tracking (non-blocking)

@@ -38,7 +38,7 @@ This project follows a strict test-driven development (TDD) workflow.
 
 ## Current Status
 
-- **Where we are**: Phase 1.1 complete - URL expiration + smart cache TTL & warmup! **50 real integration tests passing**.
+- **Where we are**: Phase 2.1 complete - Redis-backed distributed rate limiting! **110 tests passing**.
 - **Features Complete**:
   - ✅ Base62 short code generation
   - ✅ Auto-generated + custom short codes
@@ -52,8 +52,13 @@ This project follows a strict test-driven development (TDD) workflow.
   - ✅ **URL expiration/TTL (time-to-live)**
   - ✅ **Smart cache TTL (respects URL expiry)**
   - ✅ **Cache warmup on create/update (proactive caching)**
-- **Test Coverage**: 50 tests (all passing, ~1.7s)
-- **What's next**: Phase 1 remaining features (custom short codes validation, tags, bulk creation)
+  - ✅ **Custom short code validation** (3-20 chars, alphanumeric, reserved words)
+  - ✅ **URL categories & tags** (organize and filter URLs)
+  - ✅ **Bulk URL creation** (import multiple URLs with partial success)
+  - ✅ **Redis rate limiting** (fixed window, distributed, per-IP tracking)
+  - ✅ **Rate limiting middleware** (429 responses, retry-after headers)
+- **Test Coverage**: 110 tests (all passing, ~4s)
+- **What's next**: Phase 2 remaining features (input validation, HTTPS, CORS)
 - **Blockers**: None
 
 ---

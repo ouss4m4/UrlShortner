@@ -25,7 +25,7 @@ public class UrlRedirectTests
     public async Task CanExpandShortCodeToOriginalUrl()
     {
         using var context = GetInMemoryDbContext();
-        var service = new UrlService(context, GetShortCodeGenerator());
+        var service = new UrlService(context, GetShortCodeGenerator(), new UrlValidator());
         
         var url = new Url
         {
@@ -49,7 +49,7 @@ public class UrlRedirectTests
     public async Task ReturnsNullForNonExistentShortCode()
     {
         using var context = GetInMemoryDbContext();
-        var service = new UrlService(context, GetShortCodeGenerator());
+        var service = new UrlService(context, GetShortCodeGenerator(), new UrlValidator());
         
         var retrieved = await service.GetUrlByShortCodeAsync("notexist");
         
@@ -60,7 +60,7 @@ public class UrlRedirectTests
     public async Task CanRetrieveMultipleUrlsByDifferentShortCodes()
     {
         using var context = GetInMemoryDbContext();
-        var service = new UrlService(context, GetShortCodeGenerator());
+        var service = new UrlService(context, GetShortCodeGenerator(), new UrlValidator());
         
         var url1 = await service.CreateUrlAsync(new Url
         {

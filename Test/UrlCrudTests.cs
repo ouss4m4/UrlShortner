@@ -25,7 +25,7 @@ namespace Test
         public async Task CanCreateUrl()
         {
             using var context = GetInMemoryDbContext();
-            var service = new UrlService(context, GetShortCodeGenerator());
+            var service = new UrlService(context, GetShortCodeGenerator(), new UrlValidator());
             var url = new Url
             {
                 OriginalUrl = "https://example.com",
@@ -45,7 +45,7 @@ namespace Test
         public async Task CanReadUrl()
         {
             using var context = GetInMemoryDbContext();
-            var service = new UrlService(context, GetShortCodeGenerator());
+            var service = new UrlService(context, GetShortCodeGenerator(), new UrlValidator());
             var url = new Url
             {
                 OriginalUrl = "https://test.com",
@@ -66,7 +66,7 @@ namespace Test
         public async Task CanGetUrlByShortCode()
         {
             using var context = GetInMemoryDbContext();
-            var service = new UrlService(context, GetShortCodeGenerator());
+            var service = new UrlService(context, GetShortCodeGenerator(), new UrlValidator());
             var url = new Url
             {
                 OriginalUrl = "https://google.com",
@@ -86,7 +86,7 @@ namespace Test
         public async Task CanUpdateUrl()
         {
             using var context = GetInMemoryDbContext();
-            var service = new UrlService(context, GetShortCodeGenerator());
+            var service = new UrlService(context, GetShortCodeGenerator(), new UrlValidator());
             var url = new Url
             {
                 OriginalUrl = "https://old.com",
@@ -107,7 +107,7 @@ namespace Test
         public async Task CanDeleteUrl()
         {
             using var context = GetInMemoryDbContext();
-            var service = new UrlService(context, GetShortCodeGenerator());
+            var service = new UrlService(context, GetShortCodeGenerator(), new UrlValidator());
             var url = new Url
             {
                 OriginalUrl = "https://delete.com",
@@ -128,7 +128,7 @@ namespace Test
         public async Task AutoGeneratesShortCodeWhenEmpty()
         {
             using var context = GetInMemoryDbContext();
-            var service = new UrlService(context, GetShortCodeGenerator());
+            var service = new UrlService(context, GetShortCodeGenerator(), new UrlValidator());
             var url = new Url
             {
                 OriginalUrl = "https://example.com/very/long/url/path",
@@ -149,7 +149,7 @@ namespace Test
         public async Task PreservesManualShortCode()
         {
             using var context = GetInMemoryDbContext();
-            var service = new UrlService(context, GetShortCodeGenerator());
+            var service = new UrlService(context, GetShortCodeGenerator(), new UrlValidator());
             var url = new Url
             {
                 OriginalUrl = "https://example.com",
@@ -167,7 +167,7 @@ namespace Test
         public async Task ThrowsExceptionWhenCustomShortCodeAlreadyExists()
         {
             using var context = GetInMemoryDbContext();
-            var service = new UrlService(context, GetShortCodeGenerator());
+            var service = new UrlService(context, GetShortCodeGenerator(), new UrlValidator());
 
             var url1 = new Url
             {

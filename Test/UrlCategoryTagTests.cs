@@ -26,7 +26,7 @@ public class UrlCategoryTagTests
     public async Task CreateUrlAsync_WithCategory_StoresCategory()
     {
         await using var context = GetInMemoryContext();
-        var service = new UrlService(context, GetShortCodeGenerator());
+        var service = new UrlService(context, GetShortCodeGenerator(), new UrlValidator());
 
         var url = new Url
         {
@@ -46,7 +46,7 @@ public class UrlCategoryTagTests
     public async Task CreateUrlAsync_WithoutCategory_AllowsNullCategory()
     {
         await using var context = GetInMemoryContext();
-        var service = new UrlService(context, GetShortCodeGenerator());
+        var service = new UrlService(context, GetShortCodeGenerator(), new UrlValidator());
 
         var url = new Url
         {
@@ -66,7 +66,7 @@ public class UrlCategoryTagTests
     public async Task GetUrlsByCategoryAsync_ReturnsUrlsInCategory()
     {
         await using var context = GetInMemoryContext();
-        var service = new UrlService(context, GetShortCodeGenerator());
+        var service = new UrlService(context, GetShortCodeGenerator(), new UrlValidator());
 
         // Create URLs in different categories
         await service.CreateUrlAsync(new Url
@@ -101,7 +101,7 @@ public class UrlCategoryTagTests
     public async Task GetUrlsByCategoryAsync_IsCaseInsensitive()
     {
         await using var context = GetInMemoryContext();
-        var service = new UrlService(context, GetShortCodeGenerator());
+        var service = new UrlService(context, GetShortCodeGenerator(), new UrlValidator());
 
         await service.CreateUrlAsync(new Url
         {
@@ -122,7 +122,7 @@ public class UrlCategoryTagTests
     public async Task GetUrlsByCategoryAsync_FiltersExpiredUrls()
     {
         await using var context = GetInMemoryContext();
-        var service = new UrlService(context, GetShortCodeGenerator());
+        var service = new UrlService(context, GetShortCodeGenerator(), new UrlValidator());
 
         await service.CreateUrlAsync(new Url
         {
@@ -152,7 +152,7 @@ public class UrlCategoryTagTests
     public async Task CreateUrlAsync_WithTags_StoresTags()
     {
         await using var context = GetInMemoryContext();
-        var service = new UrlService(context, GetShortCodeGenerator());
+        var service = new UrlService(context, GetShortCodeGenerator(), new UrlValidator());
 
         var url = new Url
         {
@@ -172,7 +172,7 @@ public class UrlCategoryTagTests
     public async Task CreateUrlAsync_WithoutTags_AllowsNullTags()
     {
         await using var context = GetInMemoryContext();
-        var service = new UrlService(context, GetShortCodeGenerator());
+        var service = new UrlService(context, GetShortCodeGenerator(), new UrlValidator());
 
         var url = new Url
         {
@@ -192,7 +192,7 @@ public class UrlCategoryTagTests
     public async Task GetUrlsByTagAsync_ReturnsUrlsWithTag()
     {
         await using var context = GetInMemoryContext();
-        var service = new UrlService(context, GetShortCodeGenerator());
+        var service = new UrlService(context, GetShortCodeGenerator(), new UrlValidator());
 
         await service.CreateUrlAsync(new Url
         {
@@ -226,7 +226,7 @@ public class UrlCategoryTagTests
     public async Task GetUrlsByTagAsync_IsCaseInsensitive()
     {
         await using var context = GetInMemoryContext();
-        var service = new UrlService(context, GetShortCodeGenerator());
+        var service = new UrlService(context, GetShortCodeGenerator(), new UrlValidator());
 
         await service.CreateUrlAsync(new Url
         {
@@ -247,7 +247,7 @@ public class UrlCategoryTagTests
     public async Task GetUrlsByTagAsync_MatchesPartialTag()
     {
         await using var context = GetInMemoryContext();
-        var service = new UrlService(context, GetShortCodeGenerator());
+        var service = new UrlService(context, GetShortCodeGenerator(), new UrlValidator());
 
         await service.CreateUrlAsync(new Url
         {
@@ -274,7 +274,7 @@ public class UrlCategoryTagTests
     public async Task GetUrlsByTagAsync_FiltersExpiredUrls()
     {
         await using var context = GetInMemoryContext();
-        var service = new UrlService(context, GetShortCodeGenerator());
+        var service = new UrlService(context, GetShortCodeGenerator(), new UrlValidator());
 
         await service.CreateUrlAsync(new Url
         {
@@ -304,7 +304,7 @@ public class UrlCategoryTagTests
     public async Task CreateUrlAsync_WithCategoryAndTags_StoresBoth()
     {
         await using var context = GetInMemoryContext();
-        var service = new UrlService(context, GetShortCodeGenerator());
+        var service = new UrlService(context, GetShortCodeGenerator(), new UrlValidator());
 
         var url = new Url
         {
@@ -326,7 +326,7 @@ public class UrlCategoryTagTests
     public async Task GetUrlsByCategoryAsync_ReturnsOnlyUserUrls()
     {
         await using var context = GetInMemoryContext();
-        var service = new UrlService(context, GetShortCodeGenerator());
+        var service = new UrlService(context, GetShortCodeGenerator(), new UrlValidator());
 
         await service.CreateUrlAsync(new Url
         {
@@ -353,7 +353,7 @@ public class UrlCategoryTagTests
     public async Task GetUrlsByTagAsync_ReturnsOnlyUserUrls()
     {
         await using var context = GetInMemoryContext();
-        var service = new UrlService(context, GetShortCodeGenerator());
+        var service = new UrlService(context, GetShortCodeGenerator(), new UrlValidator());
 
         await service.CreateUrlAsync(new Url
         {
