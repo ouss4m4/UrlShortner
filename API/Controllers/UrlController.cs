@@ -1,4 +1,5 @@
 using Microsoft.AspNetCore.Mvc;
+using System.Security.Claims;
 using System.Threading.Tasks;
 using UrlShortner.Models;
 using UrlShortner.API.Services;
@@ -18,6 +19,20 @@ namespace UrlShortner.API.Controllers
         [HttpPost]
         public async Task<IActionResult> Create([FromBody] Url url)
         {
+            // If custom short code is provided, require authentication
+            if (!string.IsNullOrWhiteSpace(url.ShortCode))
+            {
+                var userIdClaim = User?.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+                if (userIdClaim == null)
+                {
+                    return Unauthorized(new
+                    {
+                        error = "AuthenticationRequired",
+                        message = "Custom short codes (aliases) require authentication. Anonymous users can only use auto-generated short codes."
+                    });
+                }
+            }
+
             try
             {
                 var created = await _urlService.CreateUrlAsync(url);

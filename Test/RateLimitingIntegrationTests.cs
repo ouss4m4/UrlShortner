@@ -38,8 +38,8 @@ public class RateLimitingIntegrationTests : IClassFixture<WebApplicationFactory<
 
         var request = new
         {
-            originalUrl = "https://example.com",
-            shortCode = Guid.NewGuid().ToString()[..8]
+            originalUrl = "https://example.com"
+            // No shortCode - let it auto-generate (anonymous user)
         };
 
         // Act
