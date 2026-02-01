@@ -1,5 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using UrlShortner.API.Data;
+using UrlShortner.DTOs;
 using UrlShortner.Models;
 using BCrypt.Net;
 

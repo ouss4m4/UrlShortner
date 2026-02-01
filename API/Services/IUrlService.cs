@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using System.Threading.Tasks;
+using UrlShortner.DTOs;
 using UrlShortner.Models;
 
 namespace UrlShortner.API.Services

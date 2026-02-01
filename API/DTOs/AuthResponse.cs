@@ -1,4 +1,4 @@
-namespace UrlShortner.Models;
+namespace UrlShortner.DTOs;
 
 public class AuthResponse
 {

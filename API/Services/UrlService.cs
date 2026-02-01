@@ -3,6 +3,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
 using UrlShortner.API.Data;
+using UrlShortner.DTOs;
 using UrlShortner.Models;
 using API.Services;
 

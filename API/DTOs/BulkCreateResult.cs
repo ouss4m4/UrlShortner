@@ -1,4 +1,6 @@
-namespace UrlShortner.Models;
+using UrlShortner.Models;
+
+namespace UrlShortner.DTOs;
 
 public class BulkCreateResult
 {

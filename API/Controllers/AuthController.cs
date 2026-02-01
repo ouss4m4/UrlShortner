@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System.Security.Claims;
 using UrlShortner.API.Services;
+using UrlShortner.DTOs;
 using UrlShortner.Models;
 
 namespace UrlShortner.API.Controllers;

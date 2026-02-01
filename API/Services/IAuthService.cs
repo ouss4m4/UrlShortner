@@ -1,3 +1,4 @@
+using UrlShortner.DTOs;
 using UrlShortner.Models;
 
 namespace UrlShortner.API.Services;
