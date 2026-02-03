@@ -166,7 +166,7 @@ if (!app.Environment.IsEnvironment("Test"))
 
 // Root-level redirect endpoint: /{shortCode} -> Original URL
 // Route constraint: only match 4-12 alphanumeric chars (excludes frontend routes like 'dashboard', 'assets', etc.)
-app.MapGet("/{shortCode:regex(^[[a-zA-Z0-9]]{{4,12}}$)}", async (string shortCode, IUrlService urlService, HttpContext httpContext, IServiceScopeFactory scopeFactory) =>
+app.MapGet("/{shortCode:regex(^[a-zA-Z0-9]{{4,12}}$)}", async (string shortCode, IUrlService urlService, HttpContext httpContext, IServiceScopeFactory scopeFactory) =>
 {
     var url = await urlService.GetUrlByShortCodeAsync(shortCode);
     if (url == null)

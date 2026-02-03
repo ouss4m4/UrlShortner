@@ -4,24 +4,47 @@ using System.Text;
 namespace UrlShortner.API.Services;
 
 /// <summary>
-/// Generates short codes using base62 encoding (0-9, a-z, A-Z)
-/// This provides URL-safe, compact representations of integer IDs
+/// Generates short codes using base62 encoding with random padding
+/// This provides URL-safe, compact, and non-sequential codes
 /// </summary>
 public class ShortCodeGenerator : IShortCodeGenerator
 {
     private const string Base62Alphabet = "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ";
     private const int Base = 62;
+    private const int MinCodeLength = 6; // Minimum 6 characters for better aesthetics and security
+    private static readonly Random _random = new Random();
 
     /// <summary>
-    /// Encodes an integer into a base62 string
+    /// Encodes an integer into a base62 string with random padding to ensure minimum length
     /// </summary>
     /// <param name="id">The integer to encode (must be positive)</param>
-    /// <returns>Base62 encoded string</returns>
+    /// <returns>Base62 encoded string (minimum 6 characters)</returns>
     public string Encode(long id)
     {
-        if (id == 0) return "0";
         if (id < 0) throw new ArgumentException("ID must be non-negative", nameof(id));
 
+        // Generate base62 code from ID
+        var baseCode = id == 0 ? "0" : EncodeBase62(id);
+
+        // If code is shorter than minimum, pad with random characters
+        if (baseCode.Length < MinCodeLength)
+        {
+            var result = new StringBuilder(baseCode);
+            var charsNeeded = MinCodeLength - baseCode.Length;
+
+            for (int i = 0; i < charsNeeded; i++)
+            {
+                result.Append(Base62Alphabet[_random.Next(Base)]);
+            }
+
+            return result.ToString();
+        }
+
+        return baseCode;
+    }
+
+    private string EncodeBase62(long id)
+    {
         var result = new StringBuilder();
 
         while (id > 0)
