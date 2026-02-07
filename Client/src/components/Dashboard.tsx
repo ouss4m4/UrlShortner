@@ -80,33 +80,6 @@ export function Dashboard({ userId }: DashboardProps) {
     }
   };
 
-  const handleToggleAnalytics = async (urlId: number) => {
-    if (expandedId === urlId) {
-      setExpandedId(null);
-      return;
-    }
-
-    setExpandedId(urlId);
-
-    if (analyticsById[urlId]) {
-      return;
-    }
-
-    try {
-      setAnalyticsLoadingId(urlId);
-      setAnalyticsErrorById((prev) => ({ ...prev, [urlId]: "" }));
-      const data = await api.analytics.url(urlId);
-      setAnalyticsById((prev) => ({ ...prev, [urlId]: data }));
-    } catch (err) {
-      setAnalyticsErrorById((prev) => ({
-        ...prev,
-        [urlId]: err instanceof Error ? err.message : "Failed to load analytics",
-      }));
-    } finally {
-      setAnalyticsLoadingId(null);
-    }
-  };
-
   if (loading) {
     return (
       <div className="text-center py-12">
@@ -193,20 +166,20 @@ export function Dashboard({ userId }: DashboardProps) {
                     <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                       <div className="bg-blue-50 dark:bg-blue-950 rounded-lg p-4">
                         <p className="text-sm font-medium text-muted-foreground mb-1">Total Visits</p>
-                        <p className="text-3xl font-bold text-blue-600 dark:text-blue-400">{analyticsById[url.id].totalVisits}</p>
+                        <p className="text-3xl font-bold text-blue-600 dark:text-blue-400">{analyticsById[url.id]!.totalVisits}</p>
                       </div>
                       <div className="bg-green-50 dark:bg-green-950 rounded-lg p-4">
                         <p className="text-sm font-medium text-muted-foreground mb-1">First Visit</p>
                         <p className="text-sm">
-                          {analyticsById[url.id].firstVisit
-                            ? new Date(analyticsById[url.id].firstVisit!).toLocaleString()
+                          {analyticsById[url.id]!.firstVisit
+                            ? new Date(analyticsById[url.id]!.firstVisit!).toLocaleString()
                             : "No visits yet"}
                         </p>
                       </div>
                       <div className="bg-purple-50 dark:bg-purple-950 rounded-lg p-4">
                         <p className="text-sm font-medium text-muted-foreground mb-1">Last Visit</p>
                         <p className="text-sm">
-                          {analyticsById[url.id].lastVisit ? new Date(analyticsById[url.id].lastVisit!).toLocaleString() : "No visits yet"}
+                          {analyticsById[url.id]!.lastVisit ? new Date(analyticsById[url.id]!.lastVisit!).toLocaleString() : "No visits yet"}
                         </p>
                       </div>
                     </div>
