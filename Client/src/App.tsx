@@ -3,6 +3,7 @@ import "./App.css";
 import { api, type CreateUrlResponse } from "./lib/api";
 import { cn } from "./lib/utils";
 import { useAuth } from "./hooks/useAuth";
+import { useToast } from "./hooks/useToast";
 import { Auth } from "./components/Auth";
 import { Dashboard } from "./components/Dashboard";
 
@@ -20,6 +21,7 @@ function App() {
   const [dashboardKey, setDashboardKey] = useState(0);
 
   const { user, isAuthenticated, login, logout } = useAuth();
+  const { success, error: showError, ToastContainer } = useToast();
 
   const handleShorten = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -40,12 +42,15 @@ function App() {
       setCategory("");
       setTags("");
       setExpiry("");
+      success("URL shortened successfully!");
       // Refresh dashboard if user is authenticated
       if (isAuthenticated) {
         setDashboardKey((prev) => prev + 1);
       }
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to shorten URL");
+      const errorMsg = err instanceof Error ? err.message : "Failed to shorten URL";
+      setError(errorMsg);
+      showError(errorMsg);
     } finally {
       setLoading(false);
     }
@@ -57,18 +62,21 @@ function App() {
     if (shortUrl) {
       await navigator.clipboard.writeText(shortUrl);
       setCopied(true);
+      success("Copied to clipboard!");
       setTimeout(() => setCopied(false), 2000);
     }
   };
 
   return (
     <div className="min-h-screen bg-background text-foreground">
+      <ToastContainer />
       {/* Auth Modal */}
       {showAuth && (
         <Auth
           onSuccess={(authResponse) => {
             login(authResponse);
             setShowAuth(false);
+            success(`Welcome back, ${authResponse.username}!`);
           }}
           onCancel={() => setShowAuth(false)}
         />
@@ -234,7 +242,7 @@ function App() {
           {/* Dashboard - Show only for authenticated users */}
           {isAuthenticated && user && (
             <div className="mt-16 pt-16 border-t border-border">
-              <Dashboard key={dashboardKey} userId={user.id} />
+              <Dashboard key={dashboardKey} userId={user.id} onSuccess={success} onError={showError} />
             </div>
           )}
         </div>

@@ -1,12 +1,15 @@
 import { useState, useEffect } from "react";
 import { api, type CreateUrlResponse, type UrlAnalytics } from "../lib/api";
 import { cn } from "../lib/utils";
+import { UrlSkeletonList } from "./UrlSkeleton";
 
 interface DashboardProps {
   userId: number;
+  onSuccess?: (message: string) => void;
+  onError?: (message: string) => void;
 }
 
-export function Dashboard({ userId }: DashboardProps) {
+export function Dashboard({ userId, onSuccess, onError }: DashboardProps) {
   const [urls, setUrls] = useState<CreateUrlResponse[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -40,8 +43,10 @@ export function Dashboard({ userId }: DashboardProps) {
     try {
       await api.urls.delete(id);
       setUrls(urls.filter((url) => url.id !== id));
+      onSuccess?.("URL deleted successfully");
     } catch (err) {
-      alert(err instanceof Error ? err.message : "Failed to delete");
+      const errorMsg = err instanceof Error ? err.message : "Failed to delete";
+      onError?.(errorMsg);
     }
   };
 
@@ -49,6 +54,7 @@ export function Dashboard({ userId }: DashboardProps) {
     const shortUrl = `${import.meta.env.DEV ? "http://localhost:5011" : window.location.origin}/${shortCode}`;
     await navigator.clipboard.writeText(shortUrl);
     setCopiedId(id);
+    onSuccess?.("Copied to clipboard!");
     setTimeout(() => setCopiedId(null), 2000);
   };
 
@@ -82,8 +88,9 @@ export function Dashboard({ userId }: DashboardProps) {
 
   if (loading) {
     return (
-      <div className="text-center py-12">
-        <p className="text-muted-foreground">Loading your links...</p>
+      <div className="space-y-4">
+        <h2 className="text-xl font-semibold">Your Links</h2>
+        <UrlSkeletonList count={3} />
       </div>
     );
   }
@@ -179,7 +186,9 @@ export function Dashboard({ userId }: DashboardProps) {
                       <div className="bg-purple-50 dark:bg-purple-950 rounded-lg p-4">
                         <p className="text-sm font-medium text-muted-foreground mb-1">Last Visit</p>
                         <p className="text-sm">
-                          {analyticsById[url.id]!.lastVisit ? new Date(analyticsById[url.id]!.lastVisit!).toLocaleString() : "No visits yet"}
+                          {analyticsById[url.id]!.lastVisit
+                            ? new Date(analyticsById[url.id]!.lastVisit!).toLocaleString()
+                            : "No visits yet"}
                         </p>
                       </div>
                     </div>
