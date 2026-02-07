@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { api, type CreateUrlResponse } from "../lib/api";
+import { api, type CreateUrlResponse, type UrlAnalytics } from "../lib/api";
 import { cn } from "../lib/utils";
 
 interface DashboardProps {
@@ -11,6 +11,10 @@ export function Dashboard({ userId }: DashboardProps) {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [copiedId, setCopiedId] = useState<number | null>(null);
+  const [expandedId, setExpandedId] = useState<number | null>(null);
+  const [analyticsById, setAnalyticsById] = useState<Record<number, UrlAnalytics | null>>({});
+  const [analyticsErrorById, setAnalyticsErrorById] = useState<Record<number, string>>({});
+  const [analyticsLoadingId, setAnalyticsLoadingId] = useState<number | null>(null);
 
   useEffect(() => {
     const loadUrls = async () => {
@@ -46,6 +50,61 @@ export function Dashboard({ userId }: DashboardProps) {
     await navigator.clipboard.writeText(shortUrl);
     setCopiedId(id);
     setTimeout(() => setCopiedId(null), 2000);
+  };
+
+  const toggleAnalytics = async (urlId: number) => {
+    // Toggle off
+    if (expandedId === urlId) {
+      setExpandedId(null);
+      return;
+    }
+
+    // Expand and load analytics if not cached
+    setExpandedId(urlId);
+
+    if (analyticsById[urlId]) {
+      // Already cached
+      return;
+    }
+
+    // Fetch analytics
+    setAnalyticsLoadingId(urlId);
+    try {
+      const data = await api.analytics.url(urlId);
+      setAnalyticsById((prev) => ({ ...prev, [urlId]: data }));
+      setAnalyticsErrorById((prev) => ({ ...prev, [urlId]: "" }));
+    } catch (err) {
+      setAnalyticsErrorById((prev) => ({ ...prev, [urlId]: err instanceof Error ? err.message : "Failed to load analytics" }));
+    } finally {
+      setAnalyticsLoadingId(null);
+    }
+  };
+
+  const handleToggleAnalytics = async (urlId: number) => {
+    if (expandedId === urlId) {
+      setExpandedId(null);
+      return;
+    }
+
+    setExpandedId(urlId);
+
+    if (analyticsById[urlId]) {
+      return;
+    }
+
+    try {
+      setAnalyticsLoadingId(urlId);
+      setAnalyticsErrorById((prev) => ({ ...prev, [urlId]: "" }));
+      const data = await api.analytics.url(urlId);
+      setAnalyticsById((prev) => ({ ...prev, [urlId]: data }));
+    } catch (err) {
+      setAnalyticsErrorById((prev) => ({
+        ...prev,
+        [urlId]: err instanceof Error ? err.message : "Failed to load analytics",
+      }));
+    } finally {
+      setAnalyticsLoadingId(null);
+    }
   };
 
   if (loading) {
@@ -100,6 +159,12 @@ export function Dashboard({ userId }: DashboardProps) {
                 {/* Actions */}
                 <div className="flex gap-2">
                   <button
+                    onClick={() => toggleAnalytics(url.id)}
+                    className="px-4 py-2 text-sm border border-border rounded-lg hover:bg-accent transition-colors"
+                  >
+                    {expandedId === url.id ? "Hide Analytics" : "Show Analytics"}
+                  </button>
+                  <button
                     onClick={() => handleCopy(url.shortCode, url.id)}
                     className={cn(
                       "px-4 py-2 text-sm border border-border rounded-lg hover:bg-accent transition-colors",
@@ -116,6 +181,38 @@ export function Dashboard({ userId }: DashboardProps) {
                   </button>
                 </div>
               </div>
+
+              {/* Analytics Section */}
+              {expandedId === url.id && (
+                <div className="mt-4 pt-4 border-t border-border">
+                  {analyticsLoadingId === url.id ? (
+                    <p className="text-muted-foreground text-sm">Loading analytics...</p>
+                  ) : analyticsErrorById[url.id] ? (
+                    <p className="text-destructive text-sm">{analyticsErrorById[url.id]}</p>
+                  ) : analyticsById[url.id] ? (
+                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                      <div className="bg-blue-50 dark:bg-blue-950 rounded-lg p-4">
+                        <p className="text-sm font-medium text-muted-foreground mb-1">Total Visits</p>
+                        <p className="text-3xl font-bold text-blue-600 dark:text-blue-400">{analyticsById[url.id].totalVisits}</p>
+                      </div>
+                      <div className="bg-green-50 dark:bg-green-950 rounded-lg p-4">
+                        <p className="text-sm font-medium text-muted-foreground mb-1">First Visit</p>
+                        <p className="text-sm">
+                          {analyticsById[url.id].firstVisit
+                            ? new Date(analyticsById[url.id].firstVisit!).toLocaleString()
+                            : "No visits yet"}
+                        </p>
+                      </div>
+                      <div className="bg-purple-50 dark:bg-purple-950 rounded-lg p-4">
+                        <p className="text-sm font-medium text-muted-foreground mb-1">Last Visit</p>
+                        <p className="text-sm">
+                          {analyticsById[url.id].lastVisit ? new Date(analyticsById[url.id].lastVisit!).toLocaleString() : "No visits yet"}
+                        </p>
+                      </div>
+                    </div>
+                  ) : null}
+                </div>
+              )}
             </div>
           );
         })}

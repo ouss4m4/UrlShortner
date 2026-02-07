@@ -9,6 +9,9 @@ import { Dashboard } from "./components/Dashboard";
 function App() {
   const [url, setUrl] = useState("");
   const [customAlias, setCustomAlias] = useState("");
+  const [category, setCategory] = useState("");
+  const [tags, setTags] = useState("");
+  const [expiry, setExpiry] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [result, setResult] = useState<CreateUrlResponse | null>(null);
@@ -27,10 +30,16 @@ function App() {
       const data = await api.urls.create({
         originalUrl: url,
         ...(customAlias && { shortCode: customAlias }),
+        ...(category && { category }),
+        ...(tags && { tags }),
+        ...(expiry && { expiry: new Date(expiry).toISOString() }),
       });
       setResult(data);
       setUrl("");
       setCustomAlias("");
+      setCategory("");
+      setTags("");
+      setExpiry("");
       // Refresh dashboard if user is authenticated
       if (isAuthenticated) {
         setDashboardKey((prev) => prev + 1);
@@ -117,6 +126,29 @@ function App() {
                     title="4-12 alphanumeric characters"
                     className="flex-1 px-4 py-3 border border-border rounded-lg bg-background focus:outline-none focus:ring-2 focus:ring-ring"
                   />
+                  <input
+                    type="text"
+                    value={category}
+                    onChange={(e) => setCategory(e.target.value)}
+                    placeholder="Category (optional)"
+                    className="flex-1 px-4 py-3 border border-border rounded-lg bg-background focus:outline-none focus:ring-2 focus:ring-ring"
+                  />
+                </div>
+
+                <div className="flex flex-col sm:flex-row gap-3">
+                  <input
+                    type="text"
+                    value={tags}
+                    onChange={(e) => setTags(e.target.value)}
+                    placeholder="Tags (comma-separated)"
+                    className="flex-1 px-4 py-3 border border-border rounded-lg bg-background focus:outline-none focus:ring-2 focus:ring-ring"
+                  />
+                  <input
+                    type="datetime-local"
+                    value={expiry}
+                    onChange={(e) => setExpiry(e.target.value)}
+                    className="flex-1 px-4 py-3 border border-border rounded-lg bg-background focus:outline-none focus:ring-2 focus:ring-ring"
+                  />
                   <button
                     type="submit"
                     disabled={loading}
@@ -172,7 +204,9 @@ function App() {
                   <p>
                     Original: <span className="break-all">{result.originalUrl}</span>
                   </p>
-                  <p className="mt-1">Clicks: {result.clickCount}</p>
+                  {result.category && <p className="mt-1">Category: {result.category}</p>}
+                  {result.tags && <p className="mt-1">Tags: {result.tags}</p>}
+                  {result.expiry && <p className="mt-1">Expires: {new Date(result.expiry).toLocaleString()}</p>}
                 </div>
               </div>
             )}

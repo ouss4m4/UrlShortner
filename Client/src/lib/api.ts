@@ -44,7 +44,9 @@ async function request<T>(endpoint: string, options?: RequestInit): Promise<T> {
 export interface CreateUrlRequest {
   originalUrl: string;
   shortCode?: string; // Backend expects 'shortCode', not 'customAlias'
-  expiresAt?: string;
+  expiry?: string | null;
+  category?: string | null;
+  tags?: string | null;
 }
 
 export interface CreateUrlResponse {
@@ -56,6 +58,26 @@ export interface CreateUrlResponse {
   expiry?: string | null;
   category?: string | null;
   tags?: string | null;
+}
+
+export interface UrlAnalytics {
+  urlId: number;
+  shortCode: string;
+  originalUrl: string;
+  totalVisits: number;
+  lastVisit?: string | null;
+  firstVisit?: string | null;
+}
+
+export interface DateAnalytics {
+  date: string;
+  totalVisits: number;
+  uniqueIps: number;
+}
+
+export interface CountryAnalytics {
+  country: string;
+  totalVisits: number;
 }
 
 export interface RegisterRequest {
@@ -101,5 +123,11 @@ export const api = {
       request<void>(`/Url/${id}`, {
         method: "DELETE",
       }),
+  },
+  analytics: {
+    url: (urlId: number) => request<UrlAnalytics>(`/Analytics/url/${urlId}`),
+    byDate: (start: string, end: string) =>
+      request<DateAnalytics[]>(`/Analytics/date?start=${encodeURIComponent(start)}&end=${encodeURIComponent(end)}`),
+    byCountry: () => request<CountryAnalytics[]>("/Analytics/country"),
   },
 };
