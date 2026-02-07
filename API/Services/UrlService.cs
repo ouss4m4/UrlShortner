@@ -86,6 +86,12 @@ namespace UrlShortner.API.Services
                     }
                 }
 
+                // Set CreatedAt timestamp
+                if (url.CreatedAt == default)
+                {
+                    url.CreatedAt = DateTime.UtcNow;
+                }
+
                 // Add the URL first to get an ID
                 _context.Urls.Add(url);
                 await _context.SaveChangesAsync();

@@ -2,6 +2,9 @@ import { useState } from "react";
 import "./App.css";
 import { api, type CreateUrlResponse } from "./lib/api";
 import { cn } from "./lib/utils";
+import { useAuth } from "./hooks/useAuth";
+import { Auth } from "./components/Auth";
+import { Dashboard } from "./components/Dashboard";
 
 function App() {
   const [url, setUrl] = useState("");
@@ -10,6 +13,10 @@ function App() {
   const [error, setError] = useState("");
   const [result, setResult] = useState<CreateUrlResponse | null>(null);
   const [copied, setCopied] = useState(false);
+  const [showAuth, setShowAuth] = useState(false);
+  const [dashboardKey, setDashboardKey] = useState(0);
+
+  const { user, isAuthenticated, login, logout } = useAuth();
 
   const handleShorten = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -24,6 +31,10 @@ function App() {
       setResult(data);
       setUrl("");
       setCustomAlias("");
+      // Refresh dashboard if user is authenticated
+      if (isAuthenticated) {
+        setDashboardKey((prev) => prev + 1);
+      }
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to shorten URL");
     } finally {
@@ -43,6 +54,38 @@ function App() {
 
   return (
     <div className="min-h-screen bg-background text-foreground">
+      {/* Auth Modal */}
+      {showAuth && (
+        <Auth
+          onSuccess={(authResponse) => {
+            login(authResponse);
+            setShowAuth(false);
+          }}
+          onCancel={() => setShowAuth(false)}
+        />
+      )}
+
+      {/* Header */}
+      <header className="border-b border-border">
+        <div className="container mx-auto px-4 py-4 flex items-center justify-between">
+          <h1 className="text-xl font-bold">LinkShort</h1>
+          <div>
+            {isAuthenticated ? (
+              <div className="flex items-center gap-4">
+                <span className="text-sm text-muted-foreground">{user?.username}</span>
+                <button onClick={logout} className="text-sm text-muted-foreground hover:text-foreground">
+                  Logout
+                </button>
+              </div>
+            ) : (
+              <button onClick={() => setShowAuth(true)} className="px-4 py-2 text-sm border border-border rounded-lg hover:bg-accent">
+                Sign In
+              </button>
+            )}
+          </div>
+        </div>
+      </header>
+
       <div className="container mx-auto px-4 py-12 md:py-20">
         <div className="max-w-3xl mx-auto">
           {/* Header */}
@@ -153,6 +196,13 @@ function App() {
               <p className="text-sm text-muted-foreground">Branded links</p>
             </div>
           </div>
+
+          {/* Dashboard - Show only for authenticated users */}
+          {isAuthenticated && user && (
+            <div className="mt-16 pt-16 border-t border-border">
+              <Dashboard key={dashboardKey} userId={user.id} />
+            </div>
+          )}
         </div>
       </div>
     </div>

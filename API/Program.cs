@@ -9,6 +9,7 @@ using UrlShortner.API.Middleware;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 using System.Text;
+// Swagger OpenAPI types removed to avoid build-time package conflicts
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -121,7 +122,8 @@ if (!isTest)
 var app = builder.Build();
 
 // Apply migrations automatically on startup in Production
-if (app.Environment.IsProduction() && !app.Environment.IsEnvironment("Test"))
+var disableMigrations = builder.Configuration.GetValue<bool>("DisableMigrations");
+if (app.Environment.IsProduction() && !app.Environment.IsEnvironment("Test") && !disableMigrations)
 {
     using var scope = app.Services.CreateScope();
     var dbContext = scope.ServiceProvider.GetRequiredService<UrlShortner.API.Data.UrlShortnerDbContext>();
@@ -142,11 +144,11 @@ if (app.Environment.IsDevelopment())
 }
 
 // HTTPS redirection (only in Production with HTTPS configured)
-// Disabled for containerized deployments - use a reverse proxy (nginx/traefik) for TLS termination
-// if (app.Environment.IsProduction())
-// {
-//     app.UseHttpsRedirection();
-// }
+// Set DisableHttpsRedirection=true for containerized deployments using a reverse proxy (nginx/traefik)
+if (app.Environment.IsProduction() && !builder.Configuration.GetValue<bool>("DisableHttpsRedirection"))
+{
+    app.UseHttpsRedirection();
+}
 
 // CORS (before routing and rate limiting)
 app.UseCors();

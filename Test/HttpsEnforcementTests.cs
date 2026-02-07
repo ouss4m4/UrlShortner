@@ -1,5 +1,7 @@
 using System.Net;
 using Microsoft.AspNetCore.Mvc.Testing;
+using Microsoft.Extensions.Configuration;
+using System.Collections.Generic;
 using Microsoft.AspNetCore.Hosting;
 using Xunit;
 
@@ -22,6 +24,13 @@ public class HttpsEnforcementTests : IClassFixture<WebApplicationFactory<Program
             .WithWebHostBuilder(builder =>
             {
                 builder.UseEnvironment("Production");
+                builder.ConfigureAppConfiguration((_, config) =>
+                {
+                    config.AddInMemoryCollection(new Dictionary<string, string?>
+                    {
+                        ["DisableMigrations"] = "true"
+                    });
+                });
             })
             .CreateClient(new WebApplicationFactoryClientOptions
             {
@@ -44,11 +53,18 @@ public class HttpsEnforcementTests : IClassFixture<WebApplicationFactory<Program
             .WithWebHostBuilder(builder =>
             {
                 builder.UseEnvironment("Production");
+                builder.ConfigureAppConfiguration((_, config) =>
+                {
+                    config.AddInMemoryCollection(new Dictionary<string, string?>
+                    {
+                        ["DisableMigrations"] = "true"
+                    });
+                });
             })
             .CreateClient();
 
         // Act - HTTPS request should work normally
-        var response = await client.GetAsync("/nonexistent");
+        var response = await client.GetAsync("/api/nonexistent");
 
         // Assert - Should get 404 (URL not found) not a redirect
         Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);

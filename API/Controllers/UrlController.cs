@@ -20,10 +20,16 @@ namespace UrlShortner.API.Controllers
         [HttpPost]
         public async Task<IActionResult> Create([FromBody] Url url)
         {
+            // Extract userId from JWT if authenticated
+            var userIdClaim = User?.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            if (userIdClaim != null)
+            {
+                url.UserId = int.Parse(userIdClaim);
+            }
+
             // If custom short code is provided, require authentication
             if (!string.IsNullOrWhiteSpace(url.ShortCode))
             {
-                var userIdClaim = User?.FindFirst(ClaimTypes.NameIdentifier)?.Value;
                 if (userIdClaim == null)
                 {
                     return Unauthorized(new

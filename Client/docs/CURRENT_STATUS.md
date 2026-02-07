@@ -1,13 +1,36 @@
 # Current Status
 
-**Last Updated**: February 1, 2026
-**Current Phase**: Phase 4 - .NET Integration ✅ COMPLETE
+**Last Updated**: February 7, 2026
+**Current Phase**: Phase 3 - Dashboard UI 🚧 IN PROGRESS
 
 ---
 
 ## ✅ Completed
 
-### Phase 4: .NET Integration
+### Phase 2: Authentication UI ✅ COMPLETE
+
+- ✅ Created Auth component (login/register toggle)
+- ✅ API client with auth.login() and auth.register()
+- ✅ useAuth hook (JWT storage, persistent login)
+- ✅ Header with Sign In button
+- ✅ User display when authenticated (username + logout)
+- ✅ Form validation (username 3+, password 6+)
+- ✅ Error handling and loading states
+- ✅ "Continue as guest" option
+- ✅ Responsive modal design with backdrop blur
+
+### Phase 1: Landing Page & URL Shortener ✅ COMPLETE
+
+- ✅ Anonymous URL shortening (no auth required)
+- ✅ 6-character short codes with random padding
+- ✅ Custom alias support (optional)
+- ✅ Copy to clipboard functionality
+- ✅ Responsive bit.ly-inspired design
+- ✅ Vite proxy configured (/api/\* → localhost:5011)
+- ✅ Dev vs prod URL handling
+- ✅ Short code redirects working
+
+### Infrastructure ✅ COMPLETE
 
 - ✅ Updated Dockerfile with multi-stage build
 - ✅ Node stage builds React app (npm ci && npm run build)

@@ -49,20 +49,57 @@ export interface CreateUrlRequest {
 
 export interface CreateUrlResponse {
   id: number;
+  userId?: number | null;
   originalUrl: string;
   shortCode: string;
-  customAlias?: string;
-  clickCount: number;
   createdAt: string;
-  expiresAt?: string;
+  expiry?: string | null;
+  category?: string | null;
+  tags?: string | null;
+}
+
+export interface RegisterRequest {
+  username: string;
+  email: string;
+  password: string;
+}
+
+export interface LoginRequest {
+  email: string;
+  password: string;
+}
+
+export interface AuthResponse {
+  accessToken: string;
+  refreshToken: string;
+  userId: number;
+  username: string;
+  email: string;
 }
 
 export const api = {
+  auth: {
+    register: (data: RegisterRequest) =>
+      request<AuthResponse>("/Auth/register", {
+        method: "POST",
+        body: JSON.stringify(data),
+      }),
+    login: (data: LoginRequest) =>
+      request<AuthResponse>("/Auth/login", {
+        method: "POST",
+        body: JSON.stringify(data),
+      }),
+  },
   urls: {
     create: (data: CreateUrlRequest) =>
       request<CreateUrlResponse>("/Url", {
         method: "POST",
         body: JSON.stringify(data),
+      }),
+    list: (userId: number) => request<CreateUrlResponse[]>(`/Url/user/${userId}`),
+    delete: (id: number) =>
+      request<void>(`/Url/${id}`, {
+        method: "DELETE",
       }),
   },
 };
