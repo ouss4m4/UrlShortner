@@ -9,9 +9,21 @@ using UrlShortner.API.Middleware;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 using System.Text;
+using Serilog;
 // Swagger OpenAPI types removed to avoid build-time package conflicts
 
+// Configure Serilog early
+Log.Logger = new LoggerConfiguration()
+    .MinimumLevel.Information()
+    .Enrich.FromLogContext()
+    .Enrich.WithProperty("InstanceId", Environment.MachineName)
+    .WriteTo.Console(outputTemplate: "[{Timestamp:HH:mm:ss} {Level:u3}] [{InstanceId}] {Message:lj}{NewLine}{Exception}")
+    .CreateLogger();
+
 var builder = WebApplication.CreateBuilder(args);
+
+// Use Serilog for logging
+builder.Host.UseSerilog();
 
 // Add services to the container.
 builder.Services.AddControllers();
@@ -223,6 +235,102 @@ app.MapGet("/{shortCode:regex(^[a-zA-Z0-9]{{4,12}}$)}", async (string shortCode,
 .WithTags("Redirect");
 
 app.MapControllers();
+
+// Health check endpoints
+app.MapGet("/health", (UrlShortner.API.Data.UrlShortnerDbContext? dbContext) =>
+{
+    var response = new HealthCheckResponse
+    {
+        Status = "Healthy",
+        InstanceId = Environment.MachineName,
+        Timestamp = DateTime.UtcNow
+    };
+    return Results.Ok(response);
+})
+.WithName("Health")
+.WithTags("Health")
+.Produces<HealthCheckResponse>(StatusCodes.Status200OK);
+
+app.MapGet("/health/live", () =>
+{
+    // Liveness probe - just check if app is running
+    var response = new HealthCheckResponse
+    {
+        Status = "Healthy",
+        InstanceId = Environment.MachineName,
+        Timestamp = DateTime.UtcNow,
+        Details = new Dictionary<string, object> { { "probe", "liveness" } }
+    };
+    return Results.Ok(response);
+})
+.WithName("HealthLive")
+.WithTags("Health")
+.Produces<HealthCheckResponse>(StatusCodes.Status200OK);
+
+app.MapGet("/health/ready", async (UrlShortner.API.Data.UrlShortnerDbContext dbContext, IConnectionMultiplexer redis) =>
+{
+    // Readiness probe - check dependencies (DB, Redis)
+    try
+    {
+        // Check database connection
+        var dbHealthy = await dbContext.Database.CanConnectAsync();
+
+        // Check Redis connection
+        var redisHealthy = redis.IsConnected;
+
+        if (dbHealthy && redisHealthy)
+        {
+            var response = new HealthCheckResponse
+            {
+                Status = "Healthy",
+                InstanceId = Environment.MachineName,
+                Timestamp = DateTime.UtcNow,
+                Details = new Dictionary<string, object>
+                {
+                    { "database", "healthy" },
+                    { "redis", "healthy" },
+                    { "probe", "readiness" }
+                }
+            };
+            return Results.Ok(response);
+        }
+        else
+        {
+            var response = new HealthCheckResponse
+            {
+                Status = "Unhealthy",
+                InstanceId = Environment.MachineName,
+                Timestamp = DateTime.UtcNow,
+                Details = new Dictionary<string, object>
+                {
+                    { "database", dbHealthy ? "healthy" : "unhealthy" },
+                    { "redis", redisHealthy ? "healthy" : "unhealthy" },
+                    { "probe", "readiness" }
+                }
+            };
+            return Results.StatusCode(StatusCodes.Status503ServiceUnavailable);
+        }
+    }
+    catch (Exception ex)
+    {
+        var response = new HealthCheckResponse
+        {
+            Status = "Unhealthy",
+            InstanceId = Environment.MachineName,
+            Timestamp = DateTime.UtcNow,
+            Details = new Dictionary<string, object>
+            {
+                { "error", ex.Message },
+                { "probe", "readiness" }
+            }
+        };
+        return Results.StatusCode(StatusCodes.Status503ServiceUnavailable);
+    }
+})
+.WithName("HealthReady")
+.WithTags("Health")
+.Produces<HealthCheckResponse>(StatusCodes.Status200OK)
+.Produces<HealthCheckResponse>(StatusCodes.Status503ServiceUnavailable);
 
 // SPA fallback - serve index.html for any routes that don't match:
 // - Static files (assets/*)
