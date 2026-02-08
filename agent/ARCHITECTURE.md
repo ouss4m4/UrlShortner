@@ -1,10 +1,4 @@
-# Architecture & Design Decisions
-
-**Complete technical architecture and key design decisions for the URL Shortener project**
-
----
-
-## 🏗️ System Architecture
+# Architecture (Minimal)
 
 ### High-Level Overview
 
@@ -45,167 +39,51 @@
         └──────────────┘
 ```
 
-### Component Responsibilities
+## Overview
 
-#### Controllers Layer
+- Client: React app served from API `/wwwroot`
+- API: .NET 10 (Controllers + Services)
+- Data: PostgreSQL via EF Core
+- Cache: Redis (cache-aside)
+- Hosting: Railway (multi-instance behind load balancer)
 
-- **Purpose:** Handle HTTP requests/responses
-- **Responsibilities:**
-  - Route mapping
-  - Request validation
-  - Response formatting
-  - Error handling (409, 404, etc.)
-  - HTTP status codes
+## Layers
 
-#### Service Layer
+- Controllers: HTTP endpoints, request/response shape
+- Services: business logic, validation, caching, analytics
+- Data: EF Core DbContext + migrations
+- Cache: Redis for hot reads and rate limiting
 
-- **Purpose:** Business logic and orchestration
-- **Responsibilities:**
-  - Data validation
-  - Business rules enforcement
-  - Short code generation
-  - Cache management
-  - Database operations via EF Core
+## Data Flow
 
-#### Data Layer (EF Core)
+1. Client calls API
+2. Controller validates request
+3. Service executes business logic
+4. Data stored in Postgres, cached in Redis
+5. Analytics recorded asynchronously
 
-- **Purpose:** Database abstraction
-- **Responsibilities:**
-  - Entity mapping
-  - Query generation
-  - Transaction management
-  - Migration tracking
+## Key Decisions
 
-#### Cache Layer (Redis)
+- Base62 short codes (URL-safe, dense keyspace)
+- Cache-aside for short code lookups
+- Fire-and-forget visit tracking
+- Redis-backed rate limiting
+- Health checks + structured logs for multi-instance ops
 
-- **Purpose:** Performance optimization
-- **Responsibilities:**
-  - Fast key-value lookups
-  - TTL management
-  - Cache invalidation
-  - Serialization/deserialization
+## Ops Notes
 
----
+- Health endpoints: `/health`, `/health/live`, `/health/ready`
+- Instance tracking: `X-Instance-Id` header + Serilog enrichment
+- Railway: multiple API replicas behind edge load balancer
+  while (number > 0)
+  {
+  result.Insert(0, Alphabet[number % 62]);
+  number /= 62;
+  }
+  return result.ToString();
+  }
 
-## 🎯 Design Patterns
-
-### 1. Repository Pattern (via EF Core)
-
-**Implementation:**
-
-```csharp
-public class UrlService : IUrlService
-{
-    private readonly UrlShortnerDbContext _context;
-
-    public async Task<Url?> GetUrlByIdAsync(int id)
-    {
-        return await _context.Urls.FindAsync(id);
-    }
-}
-```
-
-**Benefits:**
-
-- Separation of concerns
-- Testability (can mock DbContext)
-- Flexibility (can swap data sources)
-
-### 2. Cache-Aside Pattern
-
-**Implementation:**
-
-```csharp
-public async Task<Url?> GetUrlByShortCodeAsync(string shortCode)
-{
-    // 1. Check cache first
-    var cached = await _cacheService.GetAsync<Url>($"url:shortcode:{shortCode}");
-    if (cached != null) return cached;
-
-    // 2. Cache miss - query database
-    var url = await _context.Urls.FirstOrDefaultAsync(u => u.ShortCode == shortCode);
-
-    // 3. Populate cache for next time
-    if (url != null)
-    {
-        await _cacheService.SetAsync($"url:shortcode:{shortCode}", url, TimeSpan.FromHours(1));
-    }
-
-    return url;
-}
-```
-
-**Benefits:**
-
-- 10x-20x performance improvement
-- Reduces database load
-- Simple to implement and understand
-
-**Trade-offs:**
-
-- Cache invalidation complexity
-- Additional infrastructure (Redis)
-- Stale data risk (mitigated by TTL)
-
-### 3. Dependency Injection
-
-**Registration (Program.cs):**
-
-```csharp
-// Services
-builder.Services.AddScoped<IUserService, UserService>();
-builder.Services.AddScoped<IUrlService, UrlService>();
-builder.Services.AddScoped<IVisitService, VisitService>();
-builder.Services.AddScoped<IAnalyticsService, AnalyticsService>();
-
-// Utilities
-builder.Services.AddSingleton<IShortCodeGenerator, ShortCodeGenerator>();
-
-// Cache
-builder.Services.AddSingleton<IConnectionMultiplexer>(/* ... */);
-builder.Services.AddSingleton<ICacheService, RedisCacheService>();
-```
-
-**Benefits:**
-
-- Loose coupling
-- Easy testing (inject mocks)
-- Centralized configuration
-- Lifecycle management
-
----
-
-## 🔑 Key Design Decisions
-
-### Decision 1: Base62 Encoding for Short Codes
-
-**Chosen:** Base62 (0-9, a-z, A-Z)
-
-**Rationale:**
-
-- URL-safe (no special characters)
-- Efficient: 62^6 = 56 billion possible codes
-- Human-readable and typable
-- Standard in URL shorteners (Bitly, TinyURL)
-
-**Implementation:**
-
-```csharp
-private const string Alphabet = "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ";
-
-public string Encode(int number)
-{
-    if (number == 0) return Alphabet[0].ToString();
-
-    var result = new StringBuilder();
-    while (number > 0)
-    {
-        result.Insert(0, Alphabet[number % 62]);
-        number /= 62;
-    }
-    return result.ToString();
-}
-```
+````
 
 **Examples:**
 
@@ -255,7 +133,7 @@ public async Task<Url> CreateUrlAsync(string originalUrl, string? customShortCod
 
     return url;
 }
-```
+````
 
 **Trade-offs:**
 
