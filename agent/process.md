@@ -38,7 +38,7 @@ This project follows a strict test-driven development (TDD) workflow.
 
 ## Current Status
 
-- **Where we are**: Phase 2 complete - Rate limiting & security features! **165 tests passing**.
+- **Where we are**: Phase 3 complete - Authentication & Authorization! **202 tests passing**.
 - **Features Complete**:
   - ✅ Base62 short code generation
   - ✅ Auto-generated + custom short codes
@@ -56,17 +56,13 @@ This project follows a strict test-driven development (TDD) workflow.
   - ✅ Comprehensive input validation (URL format, localhost blocking)
   - ✅ HTTPS enforcement (Production-only, 308 redirect)
   - ✅ CORS policy (origin allowlist, credentials, exposed headers)
+  - ✅ JWT authentication & token management
+  - ✅ User registration/login with password hashing
+  - ✅ Protected endpoints with [Authorize] attribute
+  - ✅ User isolation (URL ownership validation)
   - ✅ Swagger/OpenAPI documentation
-  - ✅ **URL expiration/TTL (time-to-live)**
-  - ✅ **Smart cache TTL (respects URL expiry)**
-  - ✅ **Cache warmup on create/update (proactive caching)**
-  - ✅ **Custom short code validation** (3-20 chars, alphanumeric, reserved words)
-  - ✅ **URL categories & tags** (organize and filter URLs)
-  - ✅ **Bulk URL creation** (import multiple URLs with partial success)
-  - ✅ **Redis rate limiting** (fixed window, distributed, per-IP tracking)
-  - ✅ **Rate limiting middleware** (429 responses, retry-after headers)
-- **Test Coverage**: 110 tests (all passing, ~4s)
-- **What's next**: Phase 2 remaining features (input validation, HTTPS, CORS)
+- **Test Coverage**: 202 tests (all passing, ~7s)
+- **What's next**: Phase 4 - Production Readiness (health checks, logging, monitoring, connection pooling)
 - **Blockers**: None
 
 ---
