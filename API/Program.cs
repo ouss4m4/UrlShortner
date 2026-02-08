@@ -12,11 +12,15 @@ using System.Text;
 using Serilog;
 // Swagger OpenAPI types removed to avoid build-time package conflicts
 
+var instanceId = Environment.GetEnvironmentVariable("RAILWAY_INSTANCE_ID")
+    ?? Environment.GetEnvironmentVariable("RAILWAY_SERVICE_INSTANCE_ID")
+    ?? Environment.MachineName;
+
 // Configure Serilog early
 Log.Logger = new LoggerConfiguration()
     .MinimumLevel.Information()
     .Enrich.FromLogContext()
-    .Enrich.WithProperty("InstanceId", Environment.MachineName)
+    .Enrich.WithProperty("InstanceId", instanceId)
     .WriteTo.Console(outputTemplate: "[{Timestamp:HH:mm:ss} {Level:u3}] [{InstanceId}] {Message:lj}{NewLine}{Exception}")
     .CreateLogger();
 
@@ -121,8 +125,13 @@ builder.Services.AddHttpClient<IGeoIpService, IpApiGeoIpService>(client =>
 var isTest = builder.Environment.EnvironmentName == "Test";
 if (!isTest)
 {
-    var redisConnection = ConnectionMultiplexer.Connect(
-        builder.Configuration.GetConnectionString("RedisConnection") ?? "localhost:6379");
+    var redisConnectionString = builder.Configuration.GetConnectionString("RedisConnection") ?? "localhost:6379";
+    var redisOptions = ConfigurationOptions.Parse(redisConnectionString);
+    redisOptions.AbortOnConnectFail = false; // Allow startup even if Redis isn't ready yet
+    redisOptions.ConnectRetry = 5;
+    redisOptions.ConnectTimeout = 5000;
+
+    var redisConnection = ConnectionMultiplexer.Connect(redisOptions);
     builder.Services.AddSingleton<IConnectionMultiplexer>(redisConnection);
     builder.Services.AddSingleton<ICacheService, RedisCacheService>();
     builder.Services.AddSingleton<IRedisRateLimiter, RedisRateLimiter>();
@@ -132,6 +141,18 @@ if (!isTest)
 }
 
 var app = builder.Build();
+
+// Stamp responses so we can see which instance handled a request
+app.Use(async (context, next) =>
+{
+    context.Response.OnStarting(() =>
+    {
+        context.Response.Headers["X-Instance-Id"] = instanceId;
+        return Task.CompletedTask;
+    });
+
+    await next();
+});
 
 // Apply migrations automatically on startup in Production
 var disableMigrations = builder.Configuration.GetValue<bool>("DisableMigrations");
@@ -242,7 +263,7 @@ app.MapGet("/health", (UrlShortner.API.Data.UrlShortnerDbContext? dbContext) =>
     var response = new HealthCheckResponse
     {
         Status = "Healthy",
-        InstanceId = Environment.MachineName,
+        InstanceId = instanceId,
         Timestamp = DateTime.UtcNow
     };
     return Results.Ok(response);
@@ -257,7 +278,7 @@ app.MapGet("/health/live", () =>
     var response = new HealthCheckResponse
     {
         Status = "Healthy",
-        InstanceId = Environment.MachineName,
+        InstanceId = instanceId,
         Timestamp = DateTime.UtcNow,
         Details = new Dictionary<string, object> { { "probe", "liveness" } }
     };
@@ -283,7 +304,7 @@ app.MapGet("/health/ready", async (UrlShortner.API.Data.UrlShortnerDbContext dbC
             var response = new HealthCheckResponse
             {
                 Status = "Healthy",
-                InstanceId = Environment.MachineName,
+                InstanceId = instanceId,
                 Timestamp = DateTime.UtcNow,
                 Details = new Dictionary<string, object>
                 {
@@ -299,7 +320,7 @@ app.MapGet("/health/ready", async (UrlShortner.API.Data.UrlShortnerDbContext dbC
             var response = new HealthCheckResponse
             {
                 Status = "Unhealthy",
-                InstanceId = Environment.MachineName,
+                InstanceId = instanceId,
                 Timestamp = DateTime.UtcNow,
                 Details = new Dictionary<string, object>
                 {
@@ -316,7 +337,7 @@ app.MapGet("/health/ready", async (UrlShortner.API.Data.UrlShortnerDbContext dbC
         var response = new HealthCheckResponse
         {
             Status = "Unhealthy",
-            InstanceId = Environment.MachineName,
+            InstanceId = instanceId,
             Timestamp = DateTime.UtcNow,
             Details = new Dictionary<string, object>
             {
