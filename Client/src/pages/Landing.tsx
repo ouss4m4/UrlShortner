@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { api, type CreateUrlResponse } from "../lib/api";
 import { cn } from "../lib/utils";
+import { validateUrl } from "../lib/url";
 
 interface LandingProps {
   onAuthClick: () => void;
@@ -20,7 +21,13 @@ export function Landing({ onAuthClick, ToastContainer, onSuccess, onError }: Lan
     setLoading(true);
 
     try {
-      const data = await api.urls.create({ originalUrl: url });
+      const validation = validateUrl(url);
+      if (!validation.valid || !validation.normalized) {
+        onError(validation.message ?? "Invalid URL format");
+        return;
+      }
+
+      const data = await api.urls.create({ originalUrl: validation.normalized });
       setResult(data);
       setUrl("");
       onSuccess("URL shortened successfully!");
@@ -75,10 +82,11 @@ export function Landing({ onAuthClick, ToastContainer, onSuccess, onError }: Lan
           <form onSubmit={handleShorten} className="mt-12 max-w-3xl mx-auto">
             <div className="flex flex-col sm:flex-row gap-3">
               <input
-                type="url"
+                type="text"
                 value={url}
                 onChange={(e) => setUrl(e.target.value)}
                 placeholder="Enter your long URL here..."
+                inputMode="url"
                 required
                 className="flex-1 px-6 py-4 text-lg border-2 border-border rounded-lg bg-background focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
               />

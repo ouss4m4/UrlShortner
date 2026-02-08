@@ -2,6 +2,7 @@ import { useState } from "react";
 import { api } from "../lib/api";
 import { cn } from "../lib/utils";
 import { Dashboard } from "../components/Dashboard";
+import { validateUrl } from "../lib/url";
 
 interface DashboardPageProps {
   user: { id: number; username: string; email: string };
@@ -26,8 +27,14 @@ export function DashboardPage({ user, onLogout, ToastContainer, onSuccess, onErr
     setLoading(true);
 
     try {
+      const validation = validateUrl(url);
+      if (!validation.valid || !validation.normalized) {
+        onError(validation.message ?? "Invalid URL format");
+        return;
+      }
+
       await api.urls.create({
-        originalUrl: url,
+        originalUrl: validation.normalized,
         ...(customAlias && { shortCode: customAlias }),
         ...(category && { category }),
         ...(tags && { tags }),
@@ -74,10 +81,11 @@ export function DashboardPage({ user, onLogout, ToastContainer, onSuccess, onErr
           <form onSubmit={handleCreate} className="space-y-3">
             <div className="flex gap-3">
               <input
-                type="url"
+                type="text"
                 value={url}
                 onChange={(e) => setUrl(e.target.value)}
                 placeholder="Paste long URL"
+                inputMode="url"
                 required
                 className="flex-1 px-4 py-2 border border-border rounded-lg bg-background focus:outline-none focus:ring-2 focus:ring-ring"
               />

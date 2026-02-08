@@ -18,6 +18,22 @@ namespace UrlShortner.API.Services
         private const string CacheKeyPrefix = "url:shortcode:";
         private static readonly TimeSpan CacheExpiration = TimeSpan.FromHours(1);
 
+        private static string NormalizeUrl(string url)
+        {
+            if (string.IsNullOrWhiteSpace(url))
+            {
+                return url;
+            }
+
+            url = url.Trim();
+            if (!url.Contains("://", StringComparison.Ordinal))
+            {
+                url = $"https://{url}";
+            }
+
+            return url;
+        }
+
         public UrlService(
             UrlShortnerDbContext context,
             IShortCodeGenerator shortCodeGenerator,
@@ -55,6 +71,8 @@ namespace UrlShortner.API.Services
         {
             try
             {
+                url.OriginalUrl = NormalizeUrl(url.OriginalUrl);
+
                 // Validate original URL
                 var urlValidation = _urlValidator.ValidateUrl(url.OriginalUrl);
                 if (!urlValidation.IsValid)

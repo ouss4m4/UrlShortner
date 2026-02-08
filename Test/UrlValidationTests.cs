@@ -14,6 +14,8 @@ public class UrlValidationTests
 
     [Theory]
     [InlineData("https://www.google.com")]
+    [InlineData("google.com")]
+    [InlineData("www.google.com")]
     [InlineData("http://example.com")]
     [InlineData("https://subdomain.example.com/path")]
     [InlineData("https://example.com:8080")]
@@ -84,6 +86,19 @@ public class UrlValidationTests
         // Assert
         Assert.False(result.IsValid);
         Assert.Contains("Invalid URL format", result.ErrorMessage);
+    }
+
+    [Theory]
+    [InlineData("https://somegoh.aeklgh.egq.qe/")]
+    [InlineData("somegoh.aeklgh.egq.qe")]
+    public void ValidateUrl_ReturnsFalse_ForUnsupportedDomains(string url)
+    {
+        // Act
+        var result = _validator.ValidateUrl(url);
+
+        // Assert
+        Assert.False(result.IsValid);
+        Assert.Equal("Invalid URL format: invalid or unsupported domain", result.ErrorMessage);
     }
 
     [Theory]
