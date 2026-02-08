@@ -25,9 +25,6 @@ obj/
 Client/dist/
 Client/node_modules/
 
-# Test project (not needed in API image)
-Test/
-
 # Documentation and config files
 agent/
 *.md

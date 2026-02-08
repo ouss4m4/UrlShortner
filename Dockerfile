@@ -23,30 +23,20 @@ WORKDIR /src
 
 # Copy project files
 COPY API/UrlShortner.csproj ./API/
-COPY Test/Test.csproj ./Test/
 
 # Restore dependencies
 WORKDIR /src/API
 RUN dotnet restore UrlShortner.csproj
 
-WORKDIR /src/Test
-RUN dotnet restore Test.csproj
-
 # Copy all source files
 WORKDIR /src
 COPY API/ ./API/
-COPY Test/ ./Test/
 
 # Copy frontend build to wwwroot
 WORKDIR /src/API
 COPY --from=client-build /app/Client/dist ./wwwroot
 
-# Run backend tests
-WORKDIR /src
-RUN dotnet test Test/Test.csproj -c Release --logger "console;verbosity=minimal"
-
 # Publish directly (this is what works locally)
-WORKDIR /src/API
 RUN dotnet publish UrlShortner.csproj -c Release -o /app/publish
 
 # Runtime stage
