@@ -365,10 +365,10 @@ app.Run();
 
 static string? GetPostgresConnectionString(IConfiguration config)
 {
-    var cs = config.GetConnectionString("DefaultConnection");
+    var cs = NormalizeConnectionString(config.GetConnectionString("DefaultConnection"));
     if (!string.IsNullOrWhiteSpace(cs))
     {
-        return cs;
+        return ToNpgsqlConnectionString(cs);
     }
 
     var url = Environment.GetEnvironmentVariable("DATABASE_URL")
@@ -380,27 +380,15 @@ static string? GetPostgresConnectionString(IConfiguration config)
         return cs;
     }
 
-    if (!url.StartsWith("postgres://", StringComparison.OrdinalIgnoreCase)
-        && !url.StartsWith("postgresql://", StringComparison.OrdinalIgnoreCase))
-    {
-        return url;
-    }
-
-    var uri = new Uri(url);
-    var userInfo = uri.UserInfo.Split(':', 2);
-    var username = userInfo.Length > 0 ? Uri.UnescapeDataString(userInfo[0]) : "";
-    var password = userInfo.Length > 1 ? Uri.UnescapeDataString(userInfo[1]) : "";
-    var database = uri.AbsolutePath.TrimStart('/');
-
-    return $"Host={uri.Host};Port={uri.Port};Database={database};Username={username};Password={password};Ssl Mode=Require;Trust Server Certificate=true";
+    return ToNpgsqlConnectionString(url);
 }
 
 static string? GetRedisConnectionString(IConfiguration config)
 {
-    var cs = config.GetConnectionString("RedisConnection");
+    var cs = NormalizeConnectionString(config.GetConnectionString("RedisConnection"));
     if (!string.IsNullOrWhiteSpace(cs))
     {
-        return cs;
+        return ToRedisConnectionString(cs);
     }
 
     var url = Environment.GetEnvironmentVariable("REDIS_URL")
@@ -412,13 +400,45 @@ static string? GetRedisConnectionString(IConfiguration config)
         return cs;
     }
 
-    if (!url.StartsWith("redis://", StringComparison.OrdinalIgnoreCase)
-        && !url.StartsWith("rediss://", StringComparison.OrdinalIgnoreCase))
+    return ToRedisConnectionString(url);
+}
+
+static string? NormalizeConnectionString(string? value)
+{
+    if (string.IsNullOrWhiteSpace(value))
     {
-        return url;
+        return value;
     }
 
-    var uri = new Uri(url);
+    return string.Join(string.Empty, value.Split(new[] { '\r', '\n', ' ' }, StringSplitOptions.RemoveEmptyEntries));
+}
+
+static string ToNpgsqlConnectionString(string value)
+{
+    if (!value.StartsWith("postgres://", StringComparison.OrdinalIgnoreCase)
+        && !value.StartsWith("postgresql://", StringComparison.OrdinalIgnoreCase))
+    {
+        return value;
+    }
+
+    var uri = new Uri(value);
+    var userInfo = uri.UserInfo.Split(':', 2);
+    var username = userInfo.Length > 0 ? Uri.UnescapeDataString(userInfo[0]) : "";
+    var password = userInfo.Length > 1 ? Uri.UnescapeDataString(userInfo[1]) : "";
+    var database = uri.AbsolutePath.TrimStart('/');
+
+    return $"Host={uri.Host};Port={uri.Port};Database={database};Username={username};Password={password};Ssl Mode=Require;Trust Server Certificate=true";
+}
+
+static string ToRedisConnectionString(string value)
+{
+    if (!value.StartsWith("redis://", StringComparison.OrdinalIgnoreCase)
+        && !value.StartsWith("rediss://", StringComparison.OrdinalIgnoreCase))
+    {
+        return value;
+    }
+
+    var uri = new Uri(value);
     var userInfo = uri.UserInfo.Split(':', 2);
     var password = userInfo.Length > 1 ? Uri.UnescapeDataString(userInfo[1]) : "";
     var ssl = uri.Scheme.Equals("rediss", StringComparison.OrdinalIgnoreCase) ? "ssl=True" : "";
