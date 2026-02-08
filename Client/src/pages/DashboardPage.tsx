@@ -58,28 +58,52 @@ export function DashboardPage({ user, onLogout, ToastContainer, onSuccess, onErr
   };
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen">
       <ToastContainer />
 
       {/* Header */}
-      <header className="border-b border-border bg-card sticky top-0 z-10">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
-          <div className="text-xl font-bold">🔗 UrlShort</div>
-          <div className="flex items-center gap-4">
-            <span className="text-sm text-muted-foreground">Hi, {user.username}</span>
-            <button onClick={onLogout} className="px-4 py-2 text-sm text-muted-foreground hover:text-foreground transition-colors">
-              Logout
-            </button>
+      <header className="sticky top-0 z-20">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
+          <div className="glass rounded-2xl px-5 py-3 flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <div className="h-9 w-9 rounded-xl bg-primary/10 text-primary flex items-center justify-center font-semibold">US</div>
+              <div>
+                <div className="text-lg font-semibold tracking-tight">UrlShort</div>
+                <div className="text-xs text-muted-foreground">Dashboard</div>
+              </div>
+            </div>
+            <div className="flex items-center gap-4">
+              <span className="text-sm text-muted-foreground">Hi, {user.username}</span>
+              <button
+                onClick={onLogout}
+                className="px-4 py-2 text-sm rounded-full border border-white/60 hover:bg-white/70 transition-colors"
+              >
+                Logout
+              </button>
+            </div>
           </div>
         </div>
       </header>
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8">
-        {/* Compact Create Form */}
-        <div className="bg-card border border-border rounded-lg p-6">
-          <h2 className="text-lg font-semibold mb-4">Create Short Link</h2>
-          <form onSubmit={handleCreate} className="space-y-3">
-            <div className="flex gap-3">
+        {/* Create Form */}
+        <div className="glass-strong rounded-3xl p-6 sm:p-7">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-6">
+            <div>
+              <h2 className="text-lg font-semibold">Create Short Link</h2>
+              <p className="text-sm text-muted-foreground">Launch a new link with tracking baked in.</p>
+            </div>
+            <button
+              type="button"
+              onClick={() => setShowAdvanced(!showAdvanced)}
+              className="text-xs uppercase tracking-wide px-3 py-2 rounded-full border border-white/60 hover:bg-white/70 transition-colors"
+            >
+              {showAdvanced ? "Hide" : "Show"} advanced options
+            </button>
+          </div>
+
+          <form onSubmit={handleCreate} className="space-y-4">
+            <div className="flex flex-col lg:flex-row gap-3">
               <input
                 type="text"
                 value={url}
@@ -87,23 +111,23 @@ export function DashboardPage({ user, onLogout, ToastContainer, onSuccess, onErr
                 placeholder="Paste long URL"
                 inputMode="url"
                 required
-                className="flex-1 px-4 py-2 border border-border rounded-lg bg-background focus:outline-none focus:ring-2 focus:ring-ring"
+                className="flex-1 px-4 py-3 border border-white/60 rounded-xl bg-white/70 focus:outline-none focus:ring-2 focus:ring-primary"
               />
               {showAdvanced && (
                 <input
                   type="text"
                   value={customAlias}
                   onChange={(e) => setCustomAlias(e.target.value)}
-                  placeholder="Custom alias (optional)"
+                  placeholder="Custom alias"
                   pattern="[a-zA-Z0-9]{4,12}"
-                  className="w-48 px-4 py-2 border border-border rounded-lg bg-background focus:outline-none focus:ring-2 focus:ring-ring"
+                  className="lg:w-48 px-4 py-3 border border-white/60 rounded-xl bg-white/70 focus:outline-none focus:ring-2 focus:ring-primary"
                 />
               )}
               <button
                 type="submit"
                 disabled={loading}
                 className={cn(
-                  "px-6 py-2 bg-primary text-primary-foreground rounded-lg font-medium hover:opacity-90 transition-opacity",
+                  "px-6 py-3 rounded-xl bg-primary text-primary-foreground font-semibold hover:opacity-90 transition-opacity",
                   loading && "opacity-50 cursor-not-allowed",
                 )}
               >
@@ -112,33 +136,29 @@ export function DashboardPage({ user, onLogout, ToastContainer, onSuccess, onErr
             </div>
 
             {showAdvanced && (
-              <div className="flex gap-3">
+              <div className="grid md:grid-cols-3 gap-3">
                 <input
                   type="text"
                   value={category}
                   onChange={(e) => setCategory(e.target.value)}
                   placeholder="Category"
-                  className="flex-1 px-4 py-2 border border-border rounded-lg bg-background focus:outline-none focus:ring-2 focus:ring-ring"
+                  className="px-4 py-3 border border-white/60 rounded-xl bg-white/70 focus:outline-none focus:ring-2 focus:ring-primary"
                 />
                 <input
                   type="text"
                   value={tags}
                   onChange={(e) => setTags(e.target.value)}
                   placeholder="Tags (comma-separated)"
-                  className="flex-1 px-4 py-2 border border-border rounded-lg bg-background focus:outline-none focus:ring-2 focus:ring-ring"
+                  className="px-4 py-3 border border-white/60 rounded-xl bg-white/70 focus:outline-none focus:ring-2 focus:ring-primary"
                 />
                 <input
                   type="datetime-local"
                   value={expiry}
                   onChange={(e) => setExpiry(e.target.value)}
-                  className="px-4 py-2 border border-border rounded-lg bg-background focus:outline-none focus:ring-2 focus:ring-ring"
+                  className="px-4 py-3 border border-white/60 rounded-xl bg-white/70 focus:outline-none focus:ring-2 focus:ring-primary"
                 />
               </div>
             )}
-
-            <button type="button" onClick={() => setShowAdvanced(!showAdvanced)} className="text-sm text-primary hover:underline">
-              {showAdvanced ? "Hide" : "Show"} advanced options
-            </button>
           </form>
         </div>
 

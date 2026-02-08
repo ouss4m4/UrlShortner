@@ -26,6 +26,7 @@ Test/bin/
 Test/obj/
 API/bin/
 API/obj/
+Client/test-results/
 
 # Ignore migrations snapshots (optional)
 API/Migrations/*_Snapshot.cs

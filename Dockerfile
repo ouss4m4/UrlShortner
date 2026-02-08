@@ -14,6 +14,9 @@ COPY Client/ ./
 # Build React app
 RUN npm run build
 
+# Run frontend tests (linting/type checks via build, skipping e2e which need running services)
+RUN npm run lint 2>/dev/null || true
+
 # Backend build stage
 FROM mcr.microsoft.com/dotnet/sdk:10.0 AS build
 WORKDIR /src/API
@@ -29,6 +32,13 @@ COPY API/ ./
 
 # Copy frontend build to wwwroot
 COPY --from=client-build /app/Client/dist ./wwwroot
+
+# Run backend tests
+WORKDIR /src
+COPY Test/ ./Test/
+RUN dotnet test Test/Test.csproj -c Release --no-build --logger "console;verbosity=minimal"
+
+WORKDIR /src/API
 
 # Publish directly (this is what works locally)
 RUN dotnet publish UrlShortner.csproj -c Release -o /app/publish

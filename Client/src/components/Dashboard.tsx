@@ -96,12 +96,12 @@ export function Dashboard({ userId, onSuccess, onError }: DashboardProps) {
   }
 
   if (error) {
-    return <div className="p-4 bg-destructive/10 border border-destructive/20 rounded-lg text-destructive">{error}</div>;
+    return <div className="p-4 rounded-2xl bg-destructive/10 border border-destructive/20 text-destructive">{error}</div>;
   }
 
   if (urls.length === 0) {
     return (
-      <div className="text-center py-12 space-y-4">
+      <div className="text-center py-12 space-y-4 glass rounded-3xl">
         <div className="text-4xl">📎</div>
         <h3 className="text-xl font-semibold">No links yet</h3>
         <p className="text-muted-foreground">Create your first short link above to get started</p>
@@ -113,13 +113,13 @@ export function Dashboard({ userId, onSuccess, onError }: DashboardProps) {
     <div className="space-y-4">
       <h2 className="text-xl font-semibold">Your Links ({urls.length})</h2>
 
-      <div className="space-y-3">
+      <div className="space-y-4">
         {urls.map((url) => {
           const shortUrl = `${import.meta.env.DEV ? "http://localhost:5011" : window.location.origin}/${url.shortCode}`;
 
           return (
-            <div key={url.id} className="p-4 border border-border rounded-lg bg-card hover:bg-accent/50 transition-colors">
-              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+            <div key={url.id} className="p-5 rounded-2xl glass hover:bg-white/80 transition-colors">
+              <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
                 {/* URL Info */}
                 <div className="flex-1 min-w-0 space-y-1">
                   <a
@@ -132,22 +132,22 @@ export function Dashboard({ userId, onSuccess, onError }: DashboardProps) {
                   </a>
                   <p className="text-sm text-muted-foreground truncate">→ {url.originalUrl}</p>
                   <div className="flex gap-4 text-xs text-muted-foreground">
-                    <span> {new Date(url.createdAt).toLocaleDateString()}</span>
+                    <span>{new Date(url.createdAt).toLocaleDateString()}</span>
                   </div>
                 </div>
 
                 {/* Actions */}
-                <div className="flex gap-2">
+                <div className="flex flex-wrap gap-2">
                   <button
                     onClick={() => toggleAnalytics(url.id)}
-                    className="px-4 py-2 text-sm border border-border rounded-lg hover:bg-accent transition-colors"
+                    className="px-4 py-2 text-sm border border-white/60 rounded-full hover:bg-white/70 transition-colors"
                   >
                     {expandedId === url.id ? "Hide Analytics" : "Show Analytics"}
                   </button>
                   <button
                     onClick={() => handleCopy(url.shortCode, url.id)}
                     className={cn(
-                      "px-4 py-2 text-sm border border-border rounded-lg hover:bg-accent transition-colors",
+                      "px-4 py-2 text-sm border border-white/60 rounded-full hover:bg-white/70 transition-colors",
                       copiedId === url.id && "bg-green-50 border-green-300 text-green-700",
                     )}
                   >
@@ -155,7 +155,7 @@ export function Dashboard({ userId, onSuccess, onError }: DashboardProps) {
                   </button>
                   <button
                     onClick={() => handleDelete(url.id)}
-                    className="px-4 py-2 text-sm border border-destructive/30 text-destructive rounded-lg hover:bg-destructive/10 transition-colors"
+                    className="px-4 py-2 text-sm border border-destructive/30 text-destructive rounded-full hover:bg-destructive/10 transition-colors"
                   >
                     Delete
                   </button>
@@ -164,18 +164,18 @@ export function Dashboard({ userId, onSuccess, onError }: DashboardProps) {
 
               {/* Analytics Section */}
               {expandedId === url.id && (
-                <div className="mt-4 pt-4 border-t border-border">
+                <div className="mt-4 pt-4 border-t border-white/60">
                   {analyticsLoadingId === url.id ? (
                     <p className="text-muted-foreground text-sm">Loading analytics...</p>
                   ) : analyticsErrorById[url.id] ? (
                     <p className="text-destructive text-sm">{analyticsErrorById[url.id]}</p>
                   ) : analyticsById[url.id] ? (
                     <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                      <div className="bg-blue-50 dark:bg-blue-950 rounded-lg p-4">
+                      <div className="rounded-2xl p-4 bg-white/70 border border-white/60">
                         <p className="text-sm font-medium text-muted-foreground mb-1">Total Visits</p>
-                        <p className="text-3xl font-bold text-blue-600 dark:text-blue-400">{analyticsById[url.id]!.totalVisits}</p>
+                        <p className="text-3xl font-bold text-primary">{analyticsById[url.id]!.totalVisits}</p>
                       </div>
-                      <div className="bg-green-50 dark:bg-green-950 rounded-lg p-4">
+                      <div className="rounded-2xl p-4 bg-white/70 border border-white/60">
                         <p className="text-sm font-medium text-muted-foreground mb-1">First Visit</p>
                         <p className="text-sm">
                           {analyticsById[url.id]!.firstVisit
@@ -183,7 +183,7 @@ export function Dashboard({ userId, onSuccess, onError }: DashboardProps) {
                             : "No visits yet"}
                         </p>
                       </div>
-                      <div className="bg-purple-50 dark:bg-purple-950 rounded-lg p-4">
+                      <div className="rounded-2xl p-4 bg-white/70 border border-white/60">
                         <p className="text-sm font-medium text-muted-foreground mb-1">Last Visit</p>
                         <p className="text-sm">
                           {analyticsById[url.id]!.lastVisit

@@ -37,11 +37,11 @@ export function Auth({ onSuccess, onCancel }: AuthProps) {
   };
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 backdrop-blur-sm flex items-center justify-center p-4 z-50">
-      <div className="bg-white dark:bg-gray-900 border border-border rounded-lg max-w-md w-full p-6 space-y-6 shadow-xl">
+    <div className="fixed inset-0 bg-slate-900/40 backdrop-blur-md flex items-center justify-center p-4 z-50">
+      <div className="glass-strong rounded-3xl max-w-md w-full p-6 sm:p-7 space-y-6 shadow-xl">
         {/* Header */}
         <div className="space-y-2">
-          <h2 className="text-2xl font-bold">{isLogin ? "Welcome Back" : "Create Account"}</h2>
+          <h2 className="text-2xl font-bold font-display">{isLogin ? "Welcome Back" : "Create Account"}</h2>
           <p className="text-sm text-muted-foreground">
             {isLogin ? "Sign in to manage your links and view analytics" : "Sign up to track your links and access advanced features"}
           </p>
@@ -51,51 +51,60 @@ export function Auth({ onSuccess, onCancel }: AuthProps) {
         <form onSubmit={handleSubmit} className="space-y-4">
           {!isLogin && (
             <div className="space-y-2">
-              <label className="text-sm font-medium">Username</label>
+              <label htmlFor="username" className="text-sm font-medium">
+                Username
+              </label>
               <input
+                id="username"
                 type="text"
                 value={username}
                 onChange={(e) => setUsername(e.target.value)}
                 required
                 minLength={3}
-                className="w-full px-4 py-2 border border-border rounded-lg bg-background focus:outline-none focus:ring-2 focus:ring-ring"
+                className="w-full px-4 py-2 border border-white/60 rounded-xl bg-white/70 focus:outline-none focus:ring-2 focus:ring-primary"
                 placeholder="johndoe"
               />
             </div>
           )}
 
           <div className="space-y-2">
-            <label className="text-sm font-medium">Email</label>
+            <label htmlFor="email" className="text-sm font-medium">
+              Email
+            </label>
             <input
+              id="email"
               type="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               required
-              className="w-full px-4 py-2 border border-border rounded-lg bg-background focus:outline-none focus:ring-2 focus:ring-ring"
+              className="w-full px-4 py-2 border border-white/60 rounded-xl bg-white/70 focus:outline-none focus:ring-2 focus:ring-primary"
               placeholder="you@example.com"
             />
           </div>
 
           <div className="space-y-2">
-            <label className="text-sm font-medium">Password</label>
+            <label htmlFor="password" className="text-sm font-medium">
+              Password
+            </label>
             <input
+              id="password"
               type="password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               required
               minLength={6}
-              className="w-full px-4 py-2 border border-border rounded-lg bg-background focus:outline-none focus:ring-2 focus:ring-ring"
+              className="w-full px-4 py-2 border border-white/60 rounded-xl bg-white/70 focus:outline-none focus:ring-2 focus:ring-primary"
               placeholder="••••••••"
             />
           </div>
 
-          {error && <div className="p-3 bg-destructive/10 border border-destructive/20 rounded-lg text-sm text-destructive">{error}</div>}
+          {error && <div className="p-3 bg-destructive/10 border border-destructive/20 rounded-2xl text-sm text-destructive">{error}</div>}
 
           <button
             type="submit"
             disabled={loading}
             className={cn(
-              "w-full px-4 py-2 bg-primary text-primary-foreground rounded-lg font-medium",
+              "w-full px-4 py-2 rounded-xl bg-primary text-primary-foreground font-medium",
               loading && "opacity-50 cursor-not-allowed",
             )}
           >
