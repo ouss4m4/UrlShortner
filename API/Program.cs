@@ -26,6 +26,9 @@ Log.Logger = new LoggerConfiguration()
 
 var builder = WebApplication.CreateBuilder(args);
 
+var postgresConnectionString = GetPostgresConnectionString(builder.Configuration);
+var redisConnectionString = GetRedisConnectionString(builder.Configuration);
+
 // Use Serilog for logging
 builder.Host.UseSerilog();
 
@@ -125,8 +128,7 @@ builder.Services.AddHttpClient<IGeoIpService, IpApiGeoIpService>(client =>
 var isTest = builder.Environment.EnvironmentName == "Test";
 if (!isTest)
 {
-    var redisConnectionString = builder.Configuration.GetConnectionString("RedisConnection") ?? "localhost:6379";
-    var redisOptions = ConfigurationOptions.Parse(redisConnectionString);
+    var redisOptions = ConfigurationOptions.Parse(redisConnectionString ?? "localhost:6379");
     redisOptions.AbortOnConnectFail = false; // Allow startup even if Redis isn't ready yet
     redisOptions.ConnectRetry = 5;
     redisOptions.ConnectTimeout = 5000;
@@ -137,7 +139,7 @@ if (!isTest)
     builder.Services.AddSingleton<IRedisRateLimiter, RedisRateLimiter>();
 
     builder.Services.AddDbContext<UrlShortner.API.Data.UrlShortnerDbContext>(options =>
-        options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
+        options.UseNpgsql(postgresConnectionString));
 }
 
 var app = builder.Build();
@@ -360,6 +362,71 @@ app.MapGet("/health/ready", async (UrlShortner.API.Data.UrlShortnerDbContext dbC
 app.MapFallbackToFile("index.html");
 
 app.Run();
+
+static string? GetPostgresConnectionString(IConfiguration config)
+{
+    var cs = config.GetConnectionString("DefaultConnection");
+    if (!string.IsNullOrWhiteSpace(cs))
+    {
+        return cs;
+    }
+
+    var url = Environment.GetEnvironmentVariable("DATABASE_URL")
+        ?? Environment.GetEnvironmentVariable("POSTGRES_URL")
+        ?? Environment.GetEnvironmentVariable("RAILWAY_DATABASE_URL");
+
+    if (string.IsNullOrWhiteSpace(url))
+    {
+        return cs;
+    }
+
+    if (!url.StartsWith("postgres://", StringComparison.OrdinalIgnoreCase)
+        && !url.StartsWith("postgresql://", StringComparison.OrdinalIgnoreCase))
+    {
+        return url;
+    }
+
+    var uri = new Uri(url);
+    var userInfo = uri.UserInfo.Split(':', 2);
+    var username = userInfo.Length > 0 ? Uri.UnescapeDataString(userInfo[0]) : "";
+    var password = userInfo.Length > 1 ? Uri.UnescapeDataString(userInfo[1]) : "";
+    var database = uri.AbsolutePath.TrimStart('/');
+
+    return $"Host={uri.Host};Port={uri.Port};Database={database};Username={username};Password={password};Ssl Mode=Require;Trust Server Certificate=true";
+}
+
+static string? GetRedisConnectionString(IConfiguration config)
+{
+    var cs = config.GetConnectionString("RedisConnection");
+    if (!string.IsNullOrWhiteSpace(cs))
+    {
+        return cs;
+    }
+
+    var url = Environment.GetEnvironmentVariable("REDIS_URL")
+        ?? Environment.GetEnvironmentVariable("REDIS_PRIVATE_URL")
+        ?? Environment.GetEnvironmentVariable("RAILWAY_REDIS_URL");
+
+    if (string.IsNullOrWhiteSpace(url))
+    {
+        return cs;
+    }
+
+    if (!url.StartsWith("redis://", StringComparison.OrdinalIgnoreCase)
+        && !url.StartsWith("rediss://", StringComparison.OrdinalIgnoreCase))
+    {
+        return url;
+    }
+
+    var uri = new Uri(url);
+    var userInfo = uri.UserInfo.Split(':', 2);
+    var password = userInfo.Length > 1 ? Uri.UnescapeDataString(userInfo[1]) : "";
+    var ssl = uri.Scheme.Equals("rediss", StringComparison.OrdinalIgnoreCase) ? "ssl=True" : "";
+    var passwordPart = string.IsNullOrEmpty(password) ? "" : $",password={password}";
+    var sslPart = string.IsNullOrEmpty(ssl) ? "" : $",{ssl}";
+
+    return $"{uri.Host}:{uri.Port}{passwordPart}{sslPart}";
+}
 
 // Make Program accessible for integration testing
 public partial class Program { }
