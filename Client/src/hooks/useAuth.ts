@@ -15,15 +15,17 @@ export function useAuth() {
   useEffect(() => {
     // Check for existing token on mount
     const storedToken = localStorage.getItem("token");
+    const storedRefreshToken = localStorage.getItem("refreshToken");
     const storedUser = localStorage.getItem("user");
 
-    if (storedToken && storedUser && storedUser !== "undefined") {
+    if (storedToken && storedRefreshToken && storedUser && storedUser !== "undefined") {
       try {
         setToken(storedToken);
         setUser(JSON.parse(storedUser));
       } catch (error) {
         // Clear invalid data
         localStorage.removeItem("token");
+        localStorage.removeItem("refreshToken");
         localStorage.removeItem("user");
       }
     }
@@ -37,6 +39,7 @@ export function useAuth() {
       email: authResponse.email,
     };
     localStorage.setItem("token", authResponse.accessToken);
+    localStorage.setItem("refreshToken", authResponse.refreshToken);
     localStorage.setItem("user", JSON.stringify(user));
     setToken(authResponse.accessToken);
     setUser(user);
@@ -44,6 +47,7 @@ export function useAuth() {
 
   const logout = () => {
     localStorage.removeItem("token");
+    localStorage.removeItem("refreshToken");
     localStorage.removeItem("user");
     setToken(null);
     setUser(null);

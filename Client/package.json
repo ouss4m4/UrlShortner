@@ -6,6 +6,7 @@
   "scripts": {
     "dev": "vite",
     "build": "tsc -b && vite build",
+    "build:prod": "npm run build && rm -rf ../API/wwwroot && cp -r dist ../API/wwwroot && echo '✅ Frontend deployed to API/wwwroot'",
     "lint": "eslint .",
     "preview": "vite preview"
   },
