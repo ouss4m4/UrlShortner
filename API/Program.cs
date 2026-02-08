@@ -143,9 +143,13 @@ if (app.Environment.IsDevelopment())
     });
 }
 
-// HTTPS redirection (only in Production with HTTPS configured)
-// Set DisableHttpsRedirection=true for containerized deployments using a reverse proxy (nginx/traefik)
-if (app.Environment.IsProduction() && !builder.Configuration.GetValue<bool>("DisableHttpsRedirection"))
+// HTTPS redirection (disabled for Railway/containerized deployments behind reverse proxy)
+// Railway, Heroku, etc. handle SSL termination at the edge - the app receives HTTP internally
+// Forcing HTTPS redirect causes infinite loops in these environments
+var isRailway = !string.IsNullOrEmpty(Environment.GetEnvironmentVariable("RAILWAY_ENVIRONMENT"));
+var disableHttpsRedirection = builder.Configuration.GetValue<bool>("DisableHttpsRedirection") || isRailway;
+
+if (app.Environment.IsProduction() && !disableHttpsRedirection)
 {
     app.UseHttpsRedirection();
 }
